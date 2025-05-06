@@ -1,9 +1,8 @@
 const express = require('express');
 const app = express();
 const pool = require('./db.js');
-// const supabase = require('./db.js');
 const bcrypt = require('bcrypt');
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -27,30 +26,12 @@ app.get('/users/:userId', async (req, res) => {
         const { userId } = req.params;
         const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
         res.status(200).json(result.rows[0]);
-        // const result = await sql`SELECT * FROM users WHERE id = ${ userId }`;
-        // const { data, err } = await supbase.from('users').select('*').eq('id', userId);
-        // if (err) throw err;
-        // res.status(200).json(data[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// // fetch all tasks
-// app.get('/tasks', async (req, res) => {
-//     try {
-//         const result = await pool.query('SELECT * FROM tasks');
-//         res.status(200).json(result.rows);
-//         // const result = await sql`SELECT * FROM tasks`;
-//         // const { data, err } = await supabase.from('tasks').select('*');
-//         // if (err) throw err;
-//         // res.status(200).json(data);
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// })
-
-// fetch tasks by filtering
+// fetch all tasks with filtering
 app.get('/tasks', async (req, res) => {
     try {
         const { user_id, category, keyword, created_within, completed } = req.query;
@@ -240,7 +221,27 @@ app.post('/chats/:sender_id/:receiver_id/messages', async (req, res) => {
     }
 })
 
-// edit user profile (for last_seen)
+// edit user profile (for updating last_seen and points)
+app.put('/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { lastSeen, points } = req.body;
+
+    try {
+        const result = await pool.query(
+            `UPDATE users
+             SET last_seen = $1, points = $2
+             WHERE id = $3
+             RETURNING *`,
+            [lastSeen, points, userId]
+        );
+        if (results.rows.length == 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
 
 // edit task
 app.put('/tasks/:taskId', async (req, res) => {
@@ -265,6 +266,23 @@ app.put('/tasks/:taskId', async (req, res) => {
 })
 
 // update messages (for is_read)
+app.put('/chats/:sender_id/:receiver_id/messages', async (req, res) => {
+    const { sender_id, receiver_id } = req.params;
+    const { isRead } = req.body;
+
+    try {
+        const result = await pool.query(
+            'UPDATE messages SET is_read = $1 WHERE sender_id = $2 AND receiver_id = $3 RETURNING *',
+            [isRead, sender_id, receiver_id]
+        );
+        if (result.rows.length == 0) {
+            return res.status(404).json({ error: "Message not found" });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
 
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
