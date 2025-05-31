@@ -2,27 +2,29 @@ import Logo from '@/assets/images/NUSeek logo.png';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/hooks/AuthContext';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import Constants from 'expo-constants';
 
-export default function LoginScreen() { // TODO: solve this issue
+export default function LoginScreen() {
     const { login } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    // const host = Constants.expoConfig?.extra?.EXPRESS_HOST_URL;
-    const host = 'http://localhost:3000';
+    const host = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
     console.log('host: ', host);
 
     const handleLogin = async () => {
         // handle login logic
+        setLoading(true);
         try {
             const res = await fetch(`${host}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email: email.trim(), password })
             });
             const data = await res.json();
             const user = data.content;
@@ -36,6 +38,8 @@ export default function LoginScreen() { // TODO: solve this issue
         } catch (err) {
             console.error(err);
             Alert.alert('Error', 'Unable to login');
+        } finally {
+            setLoading(false);
         }
         }
         
@@ -54,6 +58,7 @@ export default function LoginScreen() { // TODO: solve this issue
                 autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
+                editable={!loading}
             />
 
             {/* Password Input */}
@@ -64,12 +69,13 @@ export default function LoginScreen() { // TODO: solve this issue
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
+                editable={!loading}
             />
 
             {/* Forgot Password */}
             <TouchableOpacity 
                 style={styles.forgotContainer}
-                onPress={() => router.push('/forgot-password')}
+                onPress={() => router.navigate('/+not-found')}
             >
                 <ThemedText style={styles.forgot}>Forgot Password?</ThemedText>
             </TouchableOpacity>
@@ -82,7 +88,7 @@ export default function LoginScreen() { // TODO: solve this issue
             {/* Sign Up */}
             <View style={styles.signupRow}>
                 <ThemedText style={styles.signupText}>Don't have an account? </ThemedText>
-                <TouchableOpacity onPress={() => router.push('/register')}>
+                <TouchableOpacity onPress={() => router.push('./register')}>
                     <ThemedText style={styles.signupLink}>Sign up</ThemedText>
                 </TouchableOpacity>
             </View>

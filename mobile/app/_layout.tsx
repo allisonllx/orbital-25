@@ -19,16 +19,6 @@ export default function RootLayout() {
     return null;
   }
 
-  // mock for now
-  // const user = null;
-  // const loading = false;
-
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.replace('(auth)/login');
-  //   }
-  // }, [user, loading])
-
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

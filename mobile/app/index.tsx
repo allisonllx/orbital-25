@@ -21,7 +21,7 @@ export default function Index() {
     if (user) {
       router.replace("./(tabs)");
     } else {
-      router.replace('./(auth)/login'); 
+      router.replace('./(auth)/register'); 
     }
   }, [isReady, user]);
 

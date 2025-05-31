@@ -10,7 +10,6 @@ import {
     TouchableOpacity, View,
 } from 'react-native';
 
-
 export default function RegisterScreen() {
   const { login } = useAuth();
   const router = useRouter();
@@ -21,7 +20,7 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'localhost:3000';
+  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
   const host =
     Platform.OS === 'android'
       ? rawHost.replace('localhost', '10.0.2.2')
@@ -34,16 +33,10 @@ export default function RegisterScreen() {
     }
 
     // Enforce NUS student email
-    const nusDomain = '@u.nus.edu';
-    if (!email.toLowerCase().endsWith(nusDomain)) {
-      Alert.alert('Invalid NUS Email', 'Please register with a valid NUS email');
-      return false;
-    }
-
-    // Basic email format check
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRe = /^e\d{7}@u.nus.edu$/;
     if (!emailRe.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      Alert.alert('Invalid NUS Email', 'Please enter a valid NUS email address.');
       return false;
     }
 
@@ -55,12 +48,12 @@ export default function RegisterScreen() {
     return true;
   }, [name, email, password, confirm]);
 
-  const handleRegister = useCallback(async () => {
+  const handleRegister = async () => {
     if (!validate()) return;
     setLoading(true);
 
     try {
-      const res = await fetch(`http://${host}/register`, {
+      const res = await fetch(`${host}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,7 +73,7 @@ export default function RegisterScreen() {
         router.replace('../(tabs)');
       } else {
         Alert.alert('Success', 'Account created! Please log in.');
-        router.replace('/login');
+        router.replace('/(auth)/login');
       }
     } catch (err: any) {
       console.error('Register error:', err);
@@ -88,7 +81,7 @@ export default function RegisterScreen() {
     } finally {
       setLoading(false);
     }
-  }, [host, name, email, password, validate, login, router]);
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -106,7 +99,7 @@ export default function RegisterScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="NUS Email, e.g. e1234567@u.nus.edu"
         placeholderTextColor="#999"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -149,7 +142,7 @@ export default function RegisterScreen() {
 
       <View style={styles.signupRow}>
         <ThemedText style={styles.signupText}>Already have an account? </ThemedText>
-        <TouchableOpacity onPress={() => router.replace('/login')} disabled={loading}>
+        <TouchableOpacity onPress={() => router.replace('/(auth)/login')} disabled={loading}>
           <ThemedText style={styles.signupLink}>Log in</ThemedText>
         </TouchableOpacity>
       </View>
