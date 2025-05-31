@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
-const bcrypt = require('bcrypt');
 
 // fetch user by ID
 router.get('/:userId', async (req, res) => {

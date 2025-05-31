@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const app = express();
 const pool = require('./db.js');
 const userRoutes = require('./routes/users.js');
