@@ -7,13 +7,13 @@ const taskRoutes = require('./routes/tasks.js');
 const chatRoutes = require('./routes/chats.js');
 const sendResetEmail = require('./mailer.js');
 const { createClient } = require('redis');
-// import { sendResetEmail } from './mailer.js';
-// import { createClient } from 'redis';
+const { cors } = require('cors');
 
 const redis = createClient();
 redis.connect().catch(console.error);
 
 app.use(express.json());
+app.use(cors());
 app.use('/users', userRoutes);
 app.use('/tasks', taskRoutes);
 app.use('/chats', chatRoutes);
@@ -130,3 +130,5 @@ app.post('/verify-reset-code', async (req, res) => {
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
+
+module.exports = app;
