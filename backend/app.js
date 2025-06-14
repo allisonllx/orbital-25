@@ -7,7 +7,7 @@ const taskRoutes = require('./routes/tasks.js');
 const chatRoutes = require('./routes/chats.js');
 const sendResetEmail = require('./mailer.js');
 const { createClient } = require('redis');
-const { cors } = require('cors');
+const cors = require('cors');
 
 const redis = createClient();
 redis.connect().catch(console.error);

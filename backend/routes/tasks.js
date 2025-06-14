@@ -1,31 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
+const generateEmbeddings = require('../utils.js');
 
-// fetch all tasks with filtering
+// fetch all tasks with filtering and semantic search capabilities
 router.get('/', async (req, res) => {
     try {
         const { user_id, category, keyword, created_within, completed } = req.query;
 
-        let baseQuery = 'SELECT * FROM tasks';
-        let conditions = [];
         let values = [];
+        let filters = [];
 
+        // user filter
         if (user_id) {
             values.push(user_id);
-            conditions.push(`user_id = $${values.length}`);
+            filters.push(`user_id = $${values.length}`);
         }
 
+        // category filter
         if (category) {
             values.push(category);
-            conditions.push(`category = $${values.length}`);
+            conditions.push(`category && ARRAY[$${values.length}]`); // contains any of the categories listed
         }
 
-        if (keyword) {
-            values.push(`%${keyword}%`);
-            conditions.push(`{title ILIKE $${values.length} OR captions ILIKE $${values.length}}`);
-        }
-
+        // created within filter
         if (created_within) {
             let interval;
             if (created_within === '24h') interval = "1 day";
@@ -38,16 +36,36 @@ router.get('/', async (req, res) => {
             }
         }
 
+        // completed filter
         if (completed) {
             values.push(completed);
             conditions.push(`completed = $${values.length}`);
         }
 
-        if (conditions.length > 0) {
-            baseQuery += ' WHERE ' + conditions.join(' AND '); 
+        // semantic search
+        if (keyword) {
+            const embedding = await generateEmbeddings(keyword);
+            const vectorString = `[${embedding.join(',')}]`;
+            values.push(vectorString);
+            const vectorClause = `embedding IS NOT NULL ORDER BY embedding <=> $${values.length} ASC`; // using cosine distance
+
+            let whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : "";
+            const result = await pool.query(
+                `
+                SELECT * FROM tasks
+                ${whereClause}
+                ${whereClause ? 'AND' : 'WHERE'} ${vectorClause}
+                LIMIT 20
+                `,
+                values
+            );
+
+            return res.status(200).json(result.rows);
         }
 
-        const result = await pool.query(baseQuery, values);
+        // fallback if there is no keyword
+        let whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : "";
+        const result = await pool.query(`SELECT * FROM tasks ${whereClause}`, values);
         res.status(200).json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -92,10 +110,14 @@ router.post('/', async (req, res) => {
     const timestamp = new Date().toISOString();
     const completed = false;
 
+    const textToEmbed = `${title} ${caption}`;
+    const embedding = await generateEmbeddings(textToEmbed);
+    const vectorString = `[${embedding.join(',')}]`;
+
     try {
         const result = await pool.query(
-            'INSERT INTO tasks (user_id, category, title, caption, created_at, completed) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [user_id, category, title, caption, timestamp, completed]
+            'INSERT INTO tasks (user_id, category, title, caption, created_at, completed, embedding) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [user_id, category, title, caption, timestamp, completed, vectorString]
         );
         res.status(201).json({
             message: "Task created successfully",
@@ -136,13 +158,18 @@ router.put('/:taskId', async (req, res) => {
     const { taskId } = req.params;
     const { category, title, caption, completed } = req.body;
 
+    // update embeddings
+    const textToEmbed = `${title} ${caption}`;
+    const embedding = await generateEmbeddings(textToEmbed);
+    const vectorString = `[${embedding.join(',')}]`;
+
     try {
         const result = await pool.query(
             `UPDATE tasks
-             SET category = $1, title = $2, caption = $3, completed = $4
-             WHERE id = $5
+             SET category = $1, title = $2, caption = $3, completed = $4, embedding = $5
+             WHERE id = $6
              RETURNING *`,
-            [category, title, caption, completed, taskId]
+            [category, title, caption, completed, vectorString, taskId]
         );
         if (result.rows.length == 0) {
             return res.status(404).json({ error: "Task not found" });
