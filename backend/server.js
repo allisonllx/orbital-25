@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
     socket.on('send-message', async ({ sender_id, receiver_id, content }) => {
         try {
             const message = await saveMessage({ sender_id, receiver_id, content });
-            const roomId = generateRoomId(sender_id, receiver_id).toString();
+            const roomId = generateRoomId(sender_id, receiver_id);
             io.to(roomId).emit('receive-message', message);
         } catch (err) {
             console.error(err);
