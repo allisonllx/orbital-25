@@ -3,6 +3,7 @@ const { Server } = require('socket.io');
 require('dotenv').config({ path: '../.env' });
 const app = require('./app');
 const pool = require('/db.js');
+const { generateRoomId } = require('./utils');
 
 const saveMessage = async ({ sender_id, receiver_id, content }) => {
     const query = 'INSERT INTO messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *';
@@ -29,7 +30,7 @@ io.on('connection', (socket) => {
     socket.on('send-message', async ({ sender_id, receiver_id, content }) => {
         try {
             const message = await saveMessage({ sender_id, receiver_id, content });
-            const roomId = sender_id.toString() + '_' + receiver_id.toString(); // change logic later (maybe in ascending order)
+            const roomId = generateRoomId(sender_id, receiver_id).toString();
             io.to(roomId).emit('receive-message', message);
         } catch (err) {
             console.error(err);
