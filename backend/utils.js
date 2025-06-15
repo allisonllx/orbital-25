@@ -1,4 +1,3 @@
-// import { OpenAI } from 'openai';
 const OpenAI = require('openai');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -12,4 +11,10 @@ async function generateEmbeddings(text) {
     return response.data[0].embedding;
 }
 
-module.exports = generateEmbeddings;
+// for real-time chat
+const generateRoomId = (id1, id2) => {
+    const [low, high] = [id1, id2].sort((a, b) => a - b);
+    return `${low}_${high}`;
+};
+
+module.exports = { generateEmbeddings, generateRoomId };

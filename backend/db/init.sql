@@ -29,12 +29,13 @@ CREATE TABLE comments (
 
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
+    room_id TEXT NOT NULL,
     sender_id INTEGER REFERENCES users(id),
     receiver_id INTEGER REFERENCES users(id),
-    content TEXT,
+    content TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     is_read BOOLEAN DEFAULT FALSE,
-    type TEXT DEFAULT 'text'
+    type TEXT DEFAULT 'text',
 );
 
 -- add pgvector extension

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
-const generateEmbeddings = require('../utils.js');
+const { generateEmbeddings } = require('../utils.js');
 
 // fetch all tasks with filtering and semantic search capabilities
 router.get('/', async (req, res) => {
