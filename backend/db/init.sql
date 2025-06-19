@@ -35,7 +35,15 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     is_read BOOLEAN DEFAULT FALSE,
-    type TEXT DEFAULT 'text',
+    type TEXT DEFAULT 'text'
+);
+
+CREATE TABLE rooms (
+    id SERIAL PRIMARY KEY,
+    room_id TEXT UNIQUE NOT NULL,
+    user1_id INTEGER REFERENCES users(id),
+    user2_id INTEGER REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- add pgvector extension
