@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require('../db.js');
 
 // fetch all messages in a chat
-router.get('/:roomId/', async (req, res) => {
+router.get('/rooms/:roomId/', async (req, res) => {
     const { roomId } = req.params;
     try {
         const result = await pool.query(
@@ -16,8 +16,30 @@ router.get('/:roomId/', async (req, res) => {
     }
 })
 
+// fetch all rooms for a single user
+router.get('/rooms/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT r.*, m.created_at AS last_message_time
+             FROM rooms r
+             LEFT JOIN (
+                 SELECT room_id, MAX(created_at) AS created_at
+                 FROM messages
+                 GROUP BY room_id
+             ) m ON r.room_id = m.room_id
+             WHERE r.user1_id = $1 OR r.user2_id = $1
+             ORDER BY m.created_at DESC NULLS LAST;`,
+            [userId]
+        );
+        res.status(200).json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
+
 // create new message in chat
-router.post('/:roomId/', async (req, res) => {
+router.post('/rooms/:roomId/', async (req, res) => {
     const { roomId } = req.params;
     const { sender_id, receiver_id, content } = req.body;
     if (!sender_id || !receiver_id || !content) {
@@ -42,7 +64,7 @@ router.post('/:roomId/', async (req, res) => {
 })
 
 // update messages (for is_read)
-router.put('/:messageId', async (req, res) => {
+router.put('/messages/:messageId', async (req, res) => {
     const { messageId } = req.params;
     const { isRead } = req.body;
 
