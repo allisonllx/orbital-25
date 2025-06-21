@@ -17,3 +17,12 @@ export type Message = {
     created_at: string,
     is_read: boolean
 }
+
+export type ChatRoom = {
+    id?: number,
+    room_id: string,
+    user1_id?: number,
+    user2_id?: number,
+    created_at?: string,
+    last_message_id: number
+}
