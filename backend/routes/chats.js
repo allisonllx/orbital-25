@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
 
+// fetch a single message by id
+router.get('/messages/:messageId', async (req, res) => {
+    const { messageId } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT * FROM messages WHERE id = $1`,
+            [messageId]
+        );
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+})
+
 // fetch all messages in a chat
 router.get('/rooms/:roomId/', async (req, res) => {
     const { roomId } = req.params;
@@ -21,13 +35,9 @@ router.get('/rooms/users/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await pool.query(
-            `SELECT r.*, m.created_at AS last_message_time
+            `SELECT r.*, m.content AS last_message_content, m.created_at AS last_message_time
              FROM rooms r
-             LEFT JOIN (
-                 SELECT room_id, MAX(created_at) AS created_at
-                 FROM messages
-                 GROUP BY room_id
-             ) m ON r.room_id = m.room_id
+             LEFT JOIN messages m ON r.last_message_id = m.id
              WHERE r.user1_id = $1 OR r.user2_id = $1
              ORDER BY m.created_at DESC NULLS LAST;`,
             [userId]
@@ -51,9 +61,21 @@ router.post('/rooms/:roomId/', async (req, res) => {
 
     try {
         const result = await pool.query(
-            `INSERT INTO messages (room_id, sender_id, receiver_id, content, created_at, is_read) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            `INSERT INTO messages (room_id, sender_id, receiver_id, content, created_at, is_read) 
+             VALUES ($1, $2, $3, $4, $5, $6) 
+             RETURNING *`,
             [roomId, sender_id, receiver_id, content, timestamp, is_read]
         );
+
+        const messageId = result.rows[0].id;
+
+        await pool.query(
+            `UPDATE rooms
+             SET last_message_id = $1
+             WHERE room_id = $2`,
+            [messageId, roomId]
+          );
+
         res.status(201).json({
             message: "Comment created successfully",
             content: result.rows[0]
