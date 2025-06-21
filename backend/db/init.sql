@@ -43,7 +43,8 @@ CREATE TABLE rooms (
     room_id TEXT UNIQUE NOT NULL,
     user1_id INTEGER REFERENCES users(id),
     user2_id INTEGER REFERENCES users(id),
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_message_id INTEGER REFERENCES messages(id)
 );
 
 -- add pgvector extension
