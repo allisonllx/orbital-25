@@ -6,7 +6,7 @@ const { generateEmbeddings } = require('../utils.js');
 // fetch all tasks with filtering and semantic search capabilities
 router.get('/', async (req, res) => {
     try {
-        const { user_id, category, keyword, created_within, completed } = req.query;
+        const { q, user_id, category, created_within, completed } = req.query;
 
         let values = [];
         let filters = [];
@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
         }
 
         // semantic search
-        if (keyword) {
+        if (q) {
             const embedding = await generateEmbeddings(keyword);
             const vectorString = `[${embedding.join(',')}]`;
             values.push(vectorString);
@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
             return res.status(200).json(result.rows);
         }
 
-        // fallback if there is no keyword
+        // fallback if there is no q (aka keyword)
         let whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : "";
         const result = await pool.query(`SELECT * FROM tasks ${whereClause}`, values);
         res.status(200).json(result.rows);
