@@ -1,10 +1,11 @@
 // SearchScreen.tsx
-import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterRow } from '@/components/FilterRow';
 import { CategoryModal } from '@/components/CategoryModal';
 import { DateModal } from '@/components/DateModal';
+import Constants from 'expo-constants';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
@@ -15,9 +16,40 @@ export default function SearchScreen() {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
 
+  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
+  const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
+
   const applyFilters = () => {
     console.log({ query, selectedCategories, createdWithin, isCompleted });
   };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const params = new URLSearchParams();
+  
+      if (query) params.append('q', query); // assuming ?q=searchterm
+      if (selectedCategories.length > 0) {
+        selectedCategories.forEach(cat => params.append('categories', cat));
+      }
+      if (createdWithin) params.append('created_within', createdWithin); // e.g. '24h', '7d'
+      if (isCompleted !== null) params.append('completed', isCompleted.toString());
+  
+      const url = `${host}/tasks?${params.toString()}`;
+  
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          console.log('Filtered Tasks:', data);
+          // TODO: for rendering results (setResults(data) — you can add state to store results)
+        })
+        .catch(err => {
+          console.error('Failed to fetch filtered tasks', err);
+        });
+    }, 500);
+  
+    return () => clearTimeout(timeout);
+  }, [query, selectedCategories, createdWithin, isCompleted]);
+  
 
   return (
     <View style={styles.container}>
