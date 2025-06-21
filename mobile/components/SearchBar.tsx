@@ -1,7 +1,7 @@
 import { TextInput, StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type Props = {
   placeholder?: string;
@@ -10,11 +10,18 @@ type Props = {
 
 export function SearchBar({ placeholder = "Search...", onSearch }: Props) {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
 
-  const handleChange = (text: string) => {
-    setQuery(text);
-    onSearch(text);
-  };
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+        setDebouncedQuery(query);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [query]);
+
+  useEffect(() => {
+    onSearch(debouncedQuery);
+  }, [debouncedQuery]);
 
   return (
     <ThemedView style={styles.container}>
@@ -23,7 +30,7 @@ export function SearchBar({ placeholder = "Search...", onSearch }: Props) {
         style={styles.input}
         placeholder={placeholder}
         value={query}
-        onChangeText={handleChange}
+        onChangeText={setQuery}
         placeholderTextColor="#aaa"
         clearButtonMode="while-editing"
       />
