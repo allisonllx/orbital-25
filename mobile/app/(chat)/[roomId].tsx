@@ -1,15 +1,15 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import Constants from 'expo-constants';
-import { useCallback, useState, useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
+import { useCallback, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { Alert, AppState, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { io } from 'socket.io-client';
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatMessages } from "@/components/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
 import { User, Message } from "@/types/types";
+import { socket } from '@/app/index';
 
 type Props = {
     userId: number
@@ -17,19 +17,42 @@ type Props = {
 
 export function ChatRoomScreen({ userId }: Props) {
     const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
+    // const [user, setUser] = useState<User | null>(null);
+    const [partner, setPartner] = useState<User | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const { roomId } = useLocalSearchParams<{ roomId: string }>();
-
+    
     const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
     const host =
         Platform.OS === 'android'
         ? rawHost.replace('localhost', '10.0.2.2')
         : rawHost;
-    const socket = io(host);
 
+    const navigation = useNavigation();
+
+    // track when user opens the chat
+    useEffect(() => {
+        if (userId && partner) {
+          socket.emit('open-chat', { senderId: partner.id, receiverId: userId }); 
+          socket.emit('join-room', roomId);
+        }
+      }, [roomId, userId, partner]);
+
+    // update last seen on disconnect or background
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (state) => {
+          if (state !== 'active' && userId) {
+            socket.emit('update-last-seen', { userId });
+          }
+        });
+      
+        return () => {
+          subscription.remove();
+        };
+      }, [userId]);
+
+    // handle fetch messages logic
     const fetchMessages = async () => {
-        // handle fetch messages logic
         setLoading(true);
         try {
             const res = await fetch(`${host}/chats/rooms/${roomId}`, {
@@ -52,17 +75,18 @@ export function ChatRoomScreen({ userId }: Props) {
         }
     }
 
-    const fetchUser = async () => {
-        // handle fetch user logic
+    // handle fetch user logic (for partner)
+    const fetchUser = async (user_id: number) => {
         try {
-            const res = await fetch(`${host}/users/${userId}`, {
+            const res = await fetch(`${host}/users/${user_id}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
             const data = await res.json();
 
             if (res.ok) {
-                setUser(data);
+                // setUser(data);
+                setPartner(data);
               } else {
                 Alert.alert('Error', data.error || 'Failed to fetch messages');
               }
@@ -72,6 +96,7 @@ export function ChatRoomScreen({ userId }: Props) {
         }
     }
 
+    // send message
     const sendMessage = async (text: string) => {
         const message: Message = {
           room_id: roomId,
@@ -82,13 +107,13 @@ export function ChatRoomScreen({ userId }: Props) {
           is_read: false
         };
       
-        // Emit over WebSocket
-        socket.emit('send_message', message);
+        // emit over WebSocket
+        // socket.emit('send-message', message);
       
-        // Add to local state
+        // add to local state
         setMessages(prev => [...prev, message]);
       
-        // Send to backend to persist
+        // send to backend to persist (internally handles WebSocket emit)
         try {
           await fetch(`${host}/chats/rooms/${roomId}`, {
             method: 'POST',
@@ -104,6 +129,21 @@ export function ChatRoomScreen({ userId }: Props) {
         }
       };
 
+    // receive message (socket listener remains active even after one-time trigger of useEffect)
+    useEffect(() => {
+        const handler = (msg: Message) => {
+            if (msg.room_id === roomId) {
+              setMessages(prev => [...prev, msg]);
+            }
+          };
+        
+        socket.on('receive_message', handler);
+      
+        return () => {
+          socket.off('receive_message', handler);
+        };
+      }, [roomId]);
+
     const getPartnerId = (roomId: string, userId: number) => {
         const [id1, id2] = roomId.split("_").map(Number);
         if (id1 == userId) return id2;
@@ -113,22 +153,15 @@ export function ChatRoomScreen({ userId }: Props) {
 
     const partnerId = getPartnerId(roomId, userId);
 
-    useEffect(() => {
-        socket.on('receive_message', (msg) => {
-          if (msg.roomId === roomId) {
-            setMessages(prev => [...prev, msg]);
-          }
-        });
-      
-        return () => {
-          socket.off('receive_message');
-        };
-      }, [roomId]);
+    useLayoutEffect(() => {
+        const chatPartnerName = partner?.name;
+        navigation.setOptions({ title: chatPartnerName });
+      }, [navigation, roomId]);
 
-    // reloads messages every time the user navigates back to the chat screen
+    // reload messages every time the user navigates back to the chat screen
     useFocusEffect(
         useCallback(() => {
-            fetchUser();
+            fetchUser(partnerId);
             fetchMessages();
         }, [])
     )
@@ -136,10 +169,10 @@ export function ChatRoomScreen({ userId }: Props) {
     // TODO: modify the design, also consider rendering only when messages are fetched, otherwise show some loading page
     return (
         <ThemedView>
-            {loading || !user
+            {loading || !partner
              ? <ThemedText>Loading Messages ...</ThemedText>
              : (<ThemedView>
-                    <ChatHeader name={user.name} lastSeen={user.last_seen} />
+                    <ChatHeader name={partner.name} lastSeen={partner.last_seen} />
                     <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
                     <ChatInput onSend={sendMessage}/>
                 </ThemedView>
