@@ -21,8 +21,26 @@ const io = new Server(server, {
     pingTimeout: 5000, // wait 5s for pong
 });
 
+const onlineUsers = new Set();
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
+
+    socket.on('user-online', (userId) => {
+        onlineUsers.add(userId);
+        io.emit('presence-update', { userId, status: 'online' });
+      });
+    
+      // update last seen
+      socket.on('user-offline', async ({ userId }) => {
+        onlineUsers.delete(userId);
+        io.emit('presence-update', { userId, status: 'offline' });
+        try {
+            await pool.query('UPDATE users SET last_seen = NOW() WHERE id = $1', [userId]);
+          } catch (err) {
+            console.error('Error updating last seen:', err);
+          }
+      }); 
 
     socket.on('join-room', (roomId) => {
         socket.join(roomId);
@@ -60,15 +78,6 @@ io.on('connection', (socket) => {
             console.error('Error updating is_read', err);
         }
     });
-
-    // update last seen
-    socket.on('update-last-seen', async ({ userId }) => {
-        try {
-          await pool.query('UPDATE users SET last_seen = NOW() WHERE id = $1', [userId]);
-        } catch (err) {
-          console.error('Error updating last seen:', err);
-        }
-      });      
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
