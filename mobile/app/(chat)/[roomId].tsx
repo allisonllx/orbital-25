@@ -20,6 +20,7 @@ export function ChatRoomScreen({ userId }: Props) {
     // const [user, setUser] = useState<User | null>(null);
     const [partner, setPartner] = useState<User | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [isOnline, setIsOnline] = useState<boolean>(false);
     const { roomId } = useLocalSearchParams<{ roomId: string }>();
     
     const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
@@ -35,6 +36,7 @@ export function ChatRoomScreen({ userId }: Props) {
         if (userId && partner) {
           socket.emit('open-chat', { senderId: partner.id, receiverId: userId }); 
           socket.emit('join-room', roomId);
+          socket.emit('user-online', userId);
         }
       }, [roomId, userId, partner]);
 
@@ -42,7 +44,7 @@ export function ChatRoomScreen({ userId }: Props) {
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (state) => {
           if (state !== 'active' && userId) {
-            socket.emit('update-last-seen', { userId });
+            socket.emit('user-offline', { userId });
           }
         });
       
@@ -50,6 +52,21 @@ export function ChatRoomScreen({ userId }: Props) {
           subscription.remove();
         };
       }, [userId]);
+
+    // subscribe to presence updates
+    useEffect(() => {
+        const handler = ({ userId, status }: { userId: number, status: string }) => {
+          if (userId === partner?.id) {
+            setIsOnline(status === 'online');
+          }
+        };
+      
+        socket.on('presence-update', handler);
+      
+        return () => {
+          socket.off('presence-update', handler); // pass the same handler
+        };
+      }, [partner]);      
 
     // handle fetch messages logic
     const fetchMessages = async () => {
@@ -172,7 +189,7 @@ export function ChatRoomScreen({ userId }: Props) {
             {loading || !partner
              ? <ThemedText>Loading Messages ...</ThemedText>
              : (<ThemedView>
-                    <ChatHeader name={partner.name} lastSeen={partner.last_seen} />
+                    <ChatHeader name={partner.name} lastSeen={partner.last_seen} isOnline={isOnline} />
                     <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
                     <ChatInput onSend={sendMessage}/>
                 </ThemedView>

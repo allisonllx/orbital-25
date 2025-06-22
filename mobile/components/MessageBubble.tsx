@@ -10,7 +10,7 @@ type Props = {
 }
 
 export function MessageBubble({ message, isSentByMe }: Props) {
-    const time = format(new Date(message.created_at), 'hh:mm a');
+    const time = format(new Date(message.created_at), 'p');
 
     return (
         <ThemedView>
