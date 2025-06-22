@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
+const { io, emitWithRetry } = require('../server.js');
 
 // fetch a single message by id
 router.get('/messages/:messageId', async (req, res) => {
@@ -67,18 +68,23 @@ router.post('/rooms/:roomId/', async (req, res) => {
             [roomId, sender_id, receiver_id, content, timestamp, is_read]
         );
 
-        const messageId = result.rows[0].id;
+        const message = result.rows[0];
 
+        // emit event to send message data to connected clients
+        await emitWithRetry(io, message.room_id, 'receive-message', message);
+        // io.to(message.room_id).emit('receive-message', message);
+
+        // update last message in corresponding room
         await pool.query(
             `UPDATE rooms
              SET last_message_id = $1
              WHERE room_id = $2`,
-            [messageId, roomId]
+            [message.id, roomId]
           );
 
         res.status(201).json({
             message: "Comment created successfully",
-            content: result.rows[0]
+            content: message
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
