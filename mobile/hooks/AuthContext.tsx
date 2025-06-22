@@ -1,13 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  last_seen: string; // ISO date string from timestamptz, remember to use Date()
-  points: number;
-}
+import { User } from '@/types/types';
 
 interface AuthContextType {
   user: User | null;
