@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const sendResetEmail = require('./mailer.js');
+const sendResetEmail = require('../mailer.js');
 const { createClient } = require('redis');
 const pool = require('../db.js');
 
@@ -106,3 +106,5 @@ router.post('/verify-reset-code', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 })
+
+module.exports = router;
