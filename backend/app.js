@@ -37,6 +37,10 @@ app.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
     const last_seen = new Date().toISOString();
     const points = 0;
+    const emailRe = /^e\d{7}@u.nus.edu$/;
+    if (!emailRe.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
     try {
         const existing = await pool.query('SELECT 1 FROM users WHERE email = $1', [email]);
         if (existing.rows.length > 0) {
