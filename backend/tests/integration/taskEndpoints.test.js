@@ -1,3 +1,13 @@
+const mockRedis = {
+  connect: jest.fn().mockResolvedValue(),
+  quit: jest.fn().mockResolvedValue(),
+  set: jest.fn(),
+  get: jest.fn(),
+  del: jest.fn(),
+};
+
+jest.mock('redis', () => ({ createClient: () => mockRedis }));
+
 const request = require('supertest');
 const app = require('../../app');
 const pool = require('../../db.js');

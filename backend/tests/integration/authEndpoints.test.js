@@ -1,18 +1,20 @@
+const mockRedis = {
+    connect: jest.fn().mockResolvedValue(),
+    set: jest.fn(),
+    get: jest.fn(),
+    del: jest.fn(),
+};
+
+jest.mock('redis', () => ({ createClient: () => mockRedis }));
+
 const request = require('supertest');
 const app = require('../../app');
 const pool = require('../../db.js');
 const sendResetEmail = require('../../mailer');
-const redis = require('redis');
+// const redis = require('redis');
 
 jest.mock('../../db.js');
 jest.mock('../../mailer');
-
-const mockRedis = {
-  set: jest.fn(),
-  get: jest.fn(),
-  del: jest.fn(),
-};
-jest.mock('redis', () => ({ createClient: () => mockRedis }));
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -33,7 +35,7 @@ describe('Auth Endpoints', () => {
     }] }); // mock result
 
     const res = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ name: 'Alice', email: 'e1234567@u.nus.edu', password: 'password' });
 
     expect(res.statusCode).toBe(201);
@@ -42,7 +44,7 @@ describe('Auth Endpoints', () => {
 
   test('POST /register - invalid email format', async () => {
     const res = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ name: 'Alice', email: 'invalid@nus.edu', password: 'password' });
 
     expect(res.statusCode).toBe(400);
@@ -53,7 +55,7 @@ describe('Auth Endpoints', () => {
     pool.query.mockResolvedValueOnce({ rows: [{}] }); // simulates: user already exists (since array length > 0)
 
     const res = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ name: 'Bob', email: 'e1234567@u.nus.edu', password: 'pass' });
 
     expect(res.statusCode).toBe(409);
@@ -65,7 +67,7 @@ describe('Auth Endpoints', () => {
     pool.query.mockResolvedValueOnce({ rows: [{ email: 'e1234567@u.nus.edu', password: hashed }] });
 
     const res = await request(app)
-      .post('/login')
+      .post('/auth/login')
       .send({ email: 'e1234567@u.nus.edu', password: 'secret' });
 
     expect(res.statusCode).toBe(200);
@@ -77,7 +79,7 @@ describe('Auth Endpoints', () => {
     pool.query.mockResolvedValueOnce({ rows: [{ email: 'e1234567@u.nus.edu', password: hashed }] });
 
     const res = await request(app)
-      .post('/login')
+      .post('/auth/login')
       .send({ email: 'e1234567@u.nus.edu', password: 'wrongpass' });
 
     expect(res.statusCode).toBe(401);
@@ -89,7 +91,7 @@ describe('Auth Endpoints', () => {
     sendResetEmail.mockResolvedValueOnce();
 
     const res = await request(app)
-      .post('/forgot-password')
+      .post('/auth/forgot-password')
       .send({ email: 'e1234567@u.nus.edu' });
 
     expect(res.statusCode).toBe(200);
@@ -100,7 +102,7 @@ describe('Auth Endpoints', () => {
   test('POST /verify-reset-code - success', async () => {
     mockRedis.get.mockResolvedValueOnce('123456');
     const res = await request(app)
-      .post('/verify-reset-code')
+      .post('/auth/verify-reset-code')
       .send({ email: 'e1234567@u.nus.edu', code: '123456' });
 
     expect(res.statusCode).toBe(200);
@@ -111,7 +113,7 @@ describe('Auth Endpoints', () => {
   test('POST /verify-reset-code - invalid code', async () => {
     mockRedis.get.mockResolvedValueOnce('654321');
     const res = await request(app)
-      .post('/verify-reset-code')
+      .post('/auth/verify-reset-code')
       .send({ email: 'e1234567@u.nus.edu', code: '123456' });
 
     expect(res.statusCode).toBe(400);
