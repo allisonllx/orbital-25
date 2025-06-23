@@ -1,15 +1,21 @@
-const sendResetEmail = require('../../mailer');
-const { Resend } = require('resend');
+const mockSend = jest.fn();
 
 // mock the `Resend` class
-jest.mock('resend');
+jest.mock('resend', () => {
+    return {
+        Resend: jest.fn().mockImplementation(() => ({
+            emails: {
+              send: mockSend
+            }
+          }))
+    };
+});
+
+const sendResetEmail = require('../../mailer');
 
 describe('sendResetEmail', () => {
-  const mockSend = jest.fn();
-  const mockResendInstance = { emails: { send: mockSend } };
-
   beforeEach(() => {
-    Resend.mockImplementation(() => mockResendInstance);
+    mockSend.mockClear();
   });
 
   it('should send email with correct parameters and return data', async () => {
