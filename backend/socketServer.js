@@ -28,7 +28,7 @@ io.on('connection', (socket) => {
 
     socket.on('user-online', (userId) => {
         onlineUsers.add(userId);
-        io.emit('presence-update', { userId, status: 'online' });
+        io.emit('presence-update', { userId, status: 'online' }); // broadcast status to all connected clients
       });
     
       // update last seen

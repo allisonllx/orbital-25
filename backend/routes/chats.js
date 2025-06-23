@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
-const { io, emitWithRetry } = require('../server.js');
+const { io, emitWithRetry } = require('../socketServer');
 
 // fetch a single message by id
 router.get('/messages/:messageId', async (req, res) => {
