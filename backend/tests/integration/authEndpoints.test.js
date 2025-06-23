@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
-const pool = require('../../db.jd');
+const pool = require('../../db.js');
 const sendResetEmail = require('../../mailer');
 const redis = require('redis');
 
