@@ -2,7 +2,7 @@ import { Message } from '@/types/types';
 // import { ThemedText } from './ThemedText';
 import { View, Text, StyleSheet } from 'react-native';
 import { format } from 'date-fns';
-import { ThemedView } from './ThemedView';
+import { ThemedView } from '@/components/ThemedView';
 
 type Props = {
     message: Message,

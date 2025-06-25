@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { useIsFocused } from '@react-navigation/native';
 import { MessageBubble } from '@/components/MessageBubble';
 import { Message } from '@/types/types';
-import { ThemedText } from './ThemedText';
+import { ThemedText } from '@/components/ThemedText';
 
 const socket = io('http://localhost:3000'); // points to backend server
 
