@@ -26,11 +26,23 @@ export default function LoginScreen() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email.trim(), password })
             });
-            const data = await res.json();
-            const user = data.content;
+            // const data = await res.json();
+            // const user = data.content;
+            // Read response as text first so we can inspect it
+            const raw = await res.text();
+            console.log('⇠ login status', res.status);
+            console.log('⇠ login body  ', raw.substring(0, 200));   // log first 200 chars
 
-            if (res.ok && user) {
-                login(user);
+            // Only parse if the server actually sent JSON
+            let data: any = null;
+            if (res.headers.get('content-type')?.includes('application/json')) {
+                data = JSON.parse(raw);
+            }
+
+            // if (res.ok && user) {
+            if (res.ok && data?.content) {
+                // login(user);
+                login(data.content);
                 router.replace('../(tabs)');
             } else {
                 Alert.alert('Login failed', 'Invalid credentials');
