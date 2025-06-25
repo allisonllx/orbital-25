@@ -8,6 +8,18 @@ export type User = {
     interests: string[]
 }
 
+export type Task = {
+    id: number;
+    user_id: number;
+    category: string;
+    title: string;
+    caption: string;
+    created_at: string;
+    completed: boolean;
+    embedding?: number[];
+    user_image?: string; // optional avatar image
+  };
+
 export type Message = {
     id?: number,
     room_id: string,

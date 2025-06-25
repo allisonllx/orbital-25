@@ -11,7 +11,7 @@ export function TopBanner() {
     <View style={styles.container}>
       <Image source={Logo} style={styles.logo} resizeMode="contain" />
 
-      <TouchableOpacity onPress={() => router.push('/(chat)/index')}>
+      <TouchableOpacity onPress={() => router.push('/(chat)')}>
         <Ionicons name="chatbubble-ellipses-outline" size={24} color="#333" />
       </TouchableOpacity>
     </View>
