@@ -33,23 +33,25 @@ export default function CreateTaskScreen() {
 
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
-  const [location, setLocation] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const handleCategoryToggle = (cat: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(cat)
-        ? prev.filter((c) => c !== cat)
-        : [...prev, cat]
-    );
+    setSelectedCategory((prev) => (prev === cat ? null : cat));
   };
 
   const handleSubmit = async () => {
-    if (!title.trim() || !caption.trim() || !location.trim()) {
+    if (!user) {
+      Alert.alert('Error', 'User not logged in.');
+      return;
+    }
+    if (!title.trim() || !caption.trim()) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-
+    if (selectedCategory.length === 0) {
+      Alert.alert('Error', 'Please select at least one category.');
+      return;
+    }
     if (caption.length > 2000) {
       Alert.alert('Error', 'Caption cannot exceed 2000 characters.');
       return;
@@ -62,8 +64,7 @@ export default function CreateTaskScreen() {
         body: JSON.stringify({
           title,
           caption,
-          location,
-          category: selectedCategories,
+          category: [selectedCategory],
           user_id: user.id,
         }),
       });
@@ -95,13 +96,6 @@ export default function CreateTaskScreen() {
           onChangeText={setTitle}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Location"
-          value={location}
-          onChangeText={setLocation}
-        />
-
         <Text style={styles.sectionLabel}>Category:</Text>
         <View style={styles.pickerContainer}>
           {categories.map((cat) => (
@@ -109,7 +103,7 @@ export default function CreateTaskScreen() {
               key={cat}
               style={[
                 styles.pickerOption,
-                selectedCategories.includes(cat) && styles.selectedOption,
+                selectedCategory == cat && styles.selectedOption,
               ]}
               onPress={() => handleCategoryToggle(cat)}
             >
