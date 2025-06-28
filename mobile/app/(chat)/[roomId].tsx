@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import Constants from 'expo-constants';
-import { useCallback, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useLayoutEffect } from 'react';
 import { Alert, AppState, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ThemedView } from "@/components/ThemedView";
@@ -10,14 +10,14 @@ import { ChatMessages } from "@/components/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
 import { User, Message } from "@/types/types";
 import { socket } from '@/app/index';
+import { useAuth } from "@/hooks/AuthContext";
 
-type Props = {
-    userId: number
-};
-
-export function ChatRoomScreen({ userId }: Props) {
+export default function ChatRoomScreen() {
     const [loading, setLoading] = useState(false);
     // const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
+    if (!user) return (<ThemedText>Loading ...</ThemedText>);
+    const userId = user.id;
     const [partner, setPartner] = useState<User | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isOnline, setIsOnline] = useState<boolean>(false);
@@ -72,23 +72,21 @@ export function ChatRoomScreen({ userId }: Props) {
     const fetchMessages = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${host}/chats/rooms/${roomId}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                // data is the array of messages
-                setMessages(data || []);
-              } else {
-                Alert.alert('Error', data.error || 'Failed to fetch messages');
+            const res = await fetch(`${host}/chats/rooms/${roomId}`);
+            const text = await res.text();
+            if (!res.ok) {
+                const errorData = text ? JSON.parse(text) : {};
+                Alert.alert('Error', errorData.error || 'Failed to fetch messages');
+                return;
               }
+          
+            const data = text ? JSON.parse(text) : [];
+            setMessages(data);
         } catch (err) {
-              console.error(err);
-              Alert.alert('Error', 'Unable to fetch messages');
+            console.error(err);
+            Alert.alert('Error', 'Unable to fetch messages');
         } finally {
-              setLoading(false);
+            setLoading(false);
         }
     }
 
@@ -105,11 +103,11 @@ export function ChatRoomScreen({ userId }: Props) {
                 // setUser(data);
                 setPartner(data);
               } else {
-                Alert.alert('Error', data.error || 'Failed to fetch messages');
+                Alert.alert('Error', data.error || 'Failed to fetch partner');
               }
         } catch (err) {
               console.error(err);
-              Alert.alert('Error', 'Unable to fetch messages');
+              Alert.alert('Error', 'Unable to fetch partner');
         }
     }
 
