@@ -13,17 +13,7 @@ import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/AuthContext';
 import Logo from '@/assets/images/NUSeek logo.png';
-
-const categories = [
-  'academics',
-  'cca',
-  'logistics',
-  'lostnfound',
-  'feedback',
-  'career',
-  'social',
-  'others',
-];
+import { categories } from '@/constants/Categories';
 
 export default function CreateTaskScreen() {
   const { user } = useAuth();
