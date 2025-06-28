@@ -19,7 +19,10 @@ const MAPPING = {
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
   'magnifyingglass': 'search',
-} as IconMapping;
+  'plus': 'add',
+  'bell.fill': 'notifications',
+  'person.fill': 'person',
+} as IconMapping; 
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
