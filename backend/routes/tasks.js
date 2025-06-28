@@ -7,6 +7,7 @@ const { generateEmbeddings } = require('../utils.js');
 router.get('/', async (req, res) => {
     try {
         const { q, user_id, category, created_within, completed } = req.query;
+        const categories = Array.isArray(category) ? category : category ? [category] : [];
 
         let values = [];
         let filters = [];
@@ -18,9 +19,9 @@ router.get('/', async (req, res) => {
         }
 
         // category filter
-        if (category) {
-            values.push(category);
-            conditions.push(`category && ARRAY[$${values.length}]`); // contains any of the categories listed
+        if (categories.length) {
+            values.push(categories);
+            filters.push(`category && $${values.length}::text[]`); // contains any of the categories listed
         }
 
         // created within filter
@@ -32,19 +33,19 @@ router.get('/', async (req, res) => {
 
             if (interval) {
                 values.push(interval);
-                conditions.push(`timestamp >= NOW() - INTERVAL $${values.length}`);
+                filters.push(`created_at >= NOW() - ($${values.length})::interval`);
             }
         }
 
         // completed filter
         if (completed) {
             values.push(completed);
-            conditions.push(`completed = $${values.length}`);
+            filters.push(`completed = $${values.length}`);
         }
 
         // semantic search
         if (q) {
-            const embedding = await generateEmbeddings(keyword);
+            const embedding = await generateEmbeddings(q);
             const vectorString = `[${embedding.join(',')}]`;
             values.push(vectorString);
             const vectorClause = `embedding IS NOT NULL ORDER BY embedding <=> $${values.length} ASC`; // using cosine distance

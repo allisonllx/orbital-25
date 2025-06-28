@@ -18,7 +18,7 @@ router.get('/messages/:messageId', async (req, res) => {
 })
 
 // fetch all messages in a chat
-router.get('/rooms/:roomId/', async (req, res) => {
+router.get('/rooms/:roomId', async (req, res) => {
     const { roomId } = req.params;
     try {
         const result = await pool.query(
@@ -50,7 +50,7 @@ router.get('/rooms/users/:userId', async (req, res) => {
 })
 
 // create new message in chat
-router.post('/rooms/:roomId/', async (req, res) => {
+router.post('/rooms/:roomId', async (req, res) => {
     const { roomId } = req.params;
     const { sender_id, receiver_id, content } = req.body;
     if (!sender_id || !receiver_id || !content) {
@@ -71,16 +71,26 @@ router.post('/rooms/:roomId/', async (req, res) => {
         const message = result.rows[0];
 
         // emit event to send message data to connected clients
-        await emitWithRetry(io, message.room_id, 'receive-message', message);
+        const hasListeners = io.sockets.adapter.rooms.get(message.room_id)?.size > 0;
+        if (hasListeners) {
+            await emitWithRetry(io, message.room_id, 'receive-message', message)
+                .catch(console.error);   // don’t let a socket error kill the request
+        }
+        // await emitWithRetry(io, message.room_id, 'receive-message', message);
         // io.to(message.room_id).emit('receive-message', message);
 
-        // update last message in corresponding room
+        // update last message in corresponding room (or create the room if yet created)
         await pool.query(
-            `UPDATE rooms
-             SET last_message_id = $1
-             WHERE room_id = $2`,
-            [message.id, roomId]
-          );
+            `INSERT INTO rooms (room_id, user1_id, user2_id, last_message_id)
+             VALUES ($1,
+                     LEAST($2::int, $3::int),        -- smaller ID  → user1
+                     GREATEST($2::int, $3::int),     -- larger  ID  → user2
+                     $4)
+             ON CONFLICT (room_id)                   -- room already exists
+             DO UPDATE
+               SET last_message_id = EXCLUDED.last_message_id`,
+            [roomId, sender_id, receiver_id, message.id]
+        );
 
         res.status(201).json({
             message: "Comment created successfully",
