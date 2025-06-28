@@ -1,8 +1,13 @@
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-require('dotenv').config({ path: '../.env' });
 const app = require('./app');
 const pool = require('./db.js');
+
+if (process.env.NODE_ENV !== 'production') {
+  const path = require('path');
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+}
+
 // const { generateRoomId } = require('./utils');
 
 // const saveMessage = async ({ sender_id, receiver_id, content }) => {
