@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterRow } from '@/components/FilterRow';
 import { CategoryModal } from '@/components/CategoryModal';
 import { DateModal } from '@/components/DateModal';
-import Constants from 'expo-constants';
-import { useRouter } from 'expo-router';
-import { Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
+import { TaskList } from '@/components/TaskList';
+import { Task } from '@/types/types';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
@@ -17,14 +17,21 @@ export default function SearchScreen() {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
 
+  const [results, setResults] = useState<Task[]>([]);
+
   const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
   const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
 
-  const router = useRouter();
+//   const applyFilters = () => {
+//     console.log({ query, selectedCategories, createdWithin, isCompleted });
+//   };
 
-  const applyFilters = () => {
-    console.log({ query, selectedCategories, createdWithin, isCompleted });
-  };
+  const clearFilters = () => {
+    setQuery('');
+    setSelectedCategories([]);
+    setCreatedWithin(null);
+    setIsCompleted(null);
+  }
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -32,17 +39,19 @@ export default function SearchScreen() {
 
       if (query) params.append('q', query);
       if (selectedCategories.length > 0) {
-        selectedCategories.forEach(cat => params.append('categories', cat));
+        selectedCategories.forEach(cat => params.append('category', cat));
       }
       if (createdWithin) params.append('created_within', createdWithin);
       if (isCompleted !== null) params.append('completed', isCompleted.toString());
 
       const url = `${host}/tasks?${params.toString()}`;
+      console.log(url);
 
       fetch(url)
         .then(res => res.json())
         .then(data => {
-          console.log('Filtered Tasks:', data);
+          // console.log('Filtered Tasks:', data);
+          setResults(data);
           // TODO: setResults(data)
         })
         .catch(err => {
@@ -83,28 +92,11 @@ export default function SearchScreen() {
         onClose={() => setDateModalVisible(false)}
       />
 
-      <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-        <Text style={{ color: '#fff' }}>Apply Filters</Text>
+      <TouchableOpacity style={styles.applyButton} onPress={clearFilters}>
+        <Text style={{ color: '#fff' }}>Clear Filters</Text>
       </TouchableOpacity>
 
-      {/* Bottom Nav Bar */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
-          <Ionicons name="home-outline" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/search')}>
-          <Feather name="search" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/task')}>
-          <Ionicons name="add-circle-outline" size={32} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
-          <FontAwesome5 name="bookmark" size={20} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-          <Ionicons name="person-circle-outline" size={26} color="black" />
-        </TouchableOpacity>
-      </View>
+      <TaskList tasks={results} />
     </View>
   );
 }
@@ -122,18 +114,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 60, // Leave space for nav bar
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
   },
 });

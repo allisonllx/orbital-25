@@ -1,7 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-
-const categories = ['Math', 'CS', 'Finance', 'Science', 'Literature'];
+import { categories } from '@/constants/Categories';
 
 type Props = {
   visible: boolean;
