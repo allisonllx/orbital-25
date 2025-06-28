@@ -21,10 +21,10 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const host =
-    Platform.OS === 'android'
-      ? rawHost.replace('localhost', '10.0.2.2')
-      : rawHost;
+  let host = rawHost;
+  if (Platform.OS === 'android' && rawHost.includes('localhost')) {
+    host = rawHost.replace('localhost', '10.0.2.2');
+  }
 
   const validate = useCallback(() => {
     if (!name.trim() || !email.trim() || !password || !confirm) {

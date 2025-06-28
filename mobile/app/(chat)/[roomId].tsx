@@ -24,10 +24,10 @@ export default function ChatRoomScreen() {
     const [isOnline, setIsOnline] = useState<boolean>(false);
     const { roomId } = useLocalSearchParams<{ roomId: string }>();
     
-    const host =
-        Platform.OS === 'android'
-        ? rawHost.replace('localhost', '10.0.2.2')
-        : rawHost;
+    let host = rawHost;
+    if (Platform.OS === 'android' && rawHost.includes('localhost')) {
+        host = rawHost.replace('localhost', '10.0.2.2');
+    }
 
     const navigation = useNavigation();
 

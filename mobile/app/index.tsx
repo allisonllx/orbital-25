@@ -3,16 +3,15 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/AuthContext';
 import { io } from 'socket.io-client';
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
 import { API_HOST as rawHost } from '@/constants/api';
 
-const host =
-    Platform.OS === 'android'
-    ? rawHost.replace('localhost', '10.0.2.2')
-    : Platform.OS === 'ios'
-    ? Constants.expoConfig?.extra?.SOCKET_HOST 
-    : rawHost;
-const wsHost = host.replace('http', 'ws');
+let httpHost = rawHost;
+if (Platform.OS === 'android' && rawHost.includes('localhost')) {
+  httpHost = rawHost.replace('localhost', '10.0.2.2');
+}
+
+// Derive WebSocket URL: http → ws, https → wss
+const wsHost = httpHost.replace(/^http(s?):/, 'ws$1:');
 export const socket = io(wsHost, { ackTimeout: 10000, retries: 3 });
 
 socket.on('connect', () => {

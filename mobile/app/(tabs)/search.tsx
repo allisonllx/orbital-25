@@ -20,11 +20,10 @@ export default function SearchScreen() {
 
   const [results, setResults] = useState<Task[]>([]);
 
-  const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
-
-//   const applyFilters = () => {
-//     console.log({ query, selectedCategories, createdWithin, isCompleted });
-//   };
+  let host = rawHost;
+  if (Platform.OS === 'android' && rawHost.includes('localhost')) {
+    host = rawHost.replace('localhost', '10.0.2.2');
+  }
 
   const clearFilters = () => {
     setQuery('');
