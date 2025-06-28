@@ -5,7 +5,9 @@ const sendResetEmail = require('../mailer.js');
 const { createClient } = require('redis');
 const pool = require('../db.js');
 
-const redis = createClient();
+const redis = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+});
 redis.connect().catch(console.error);
 
 // register endpoint
