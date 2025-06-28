@@ -6,6 +6,7 @@ import { ChatPreviewCard } from '@/components/ChatPreviewCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ChatRoom } from '@/types/types';
 import { useAuth } from '@/hooks/AuthContext';
+import { API_HOST as rawHost } from '@/constants/api';
 
 type PartnerInfo = {
   id: number;
@@ -20,7 +21,6 @@ export default function ChatListScreen() {
   const userId = user.id;
 
   const router = useRouter();
-  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
   const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
 
   const getPartnerId = (roomId: string) => {

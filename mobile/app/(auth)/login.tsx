@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/AuthContext';
 import { useRouter, Link } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import Constants from 'expo-constants';
+import { API_HOST as host } from '@/constants/api';
 
 export default function LoginScreen() {
     const { login } = useAuth();
@@ -13,9 +13,6 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const host = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
-    console.log('host: ', host);
 
     const handleLogin = async () => {
         // handle login logic

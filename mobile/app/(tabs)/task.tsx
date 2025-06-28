@@ -14,12 +14,13 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/AuthContext';
 import Logo from '@/assets/images/NUSeek logo.png';
 import { categories } from '@/constants/Categories';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { API_HOST as host } from '@/constants/api';
 
 export default function CreateTaskScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const host =
-    Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
+  const insets = useSafeAreaInsets();      
 
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
@@ -38,7 +39,7 @@ export default function CreateTaskScreen() {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-    if (selectedCategory.length === 0) {
+    if (!selectedCategory) {
       Alert.alert('Error', 'Please select at least one category.');
       return;
     }
@@ -63,8 +64,9 @@ export default function CreateTaskScreen() {
 
       Alert.alert('Success', 'Task created successfully!');
       router.push('/(tabs)/');
-    } catch (error) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Something went wrong';
+      Alert.alert('Error', msg);
     }
   };
 
@@ -78,7 +80,13 @@ export default function CreateTaskScreen() {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.form}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={[
+          styles.form,
+          { paddingBottom: 100 + insets.bottom }
+        ]}
+      >
         <TextInput
           style={styles.input}
           placeholder="Title"
@@ -116,7 +124,7 @@ export default function CreateTaskScreen() {
       </ScrollView>
 
       {/* Bottom Buttons */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 50 }]}>
         <TouchableOpacity
           style={[styles.bottomButton, styles.cancelButton]}
           onPress={() => router.replace('/(tabs)')}
@@ -209,8 +217,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
+    // position: 'absolute',
+    // bottom: 0,
     width: '100%',
     flexDirection: 'row',
     borderTopWidth: 1,

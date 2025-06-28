@@ -7,6 +7,7 @@ import { CategoryModal } from '@/components/CategoryModal';
 import { DateModal } from '@/components/DateModal';
 import { TaskList } from '@/components/TaskList';
 import { Task } from '@/types/types';
+import { API_HOST as rawHost } from '@/constants/api';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
@@ -19,7 +20,6 @@ export default function SearchScreen() {
 
   const [results, setResults] = useState<Task[]>([]);
 
-  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
   const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
 
 //   const applyFilters = () => {

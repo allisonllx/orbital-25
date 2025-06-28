@@ -11,14 +11,12 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 import { useAuth } from '@/hooks/AuthContext'; 
+import { API_HOST as host } from '@/constants/api';
 
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const host =
-    Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
-
   const { user } = useAuth();
 
   const [task, setTask] = useState<any>(null);
@@ -86,7 +84,7 @@ export default function TaskDetailScreen() {
             const uid2 = task.user_id;
             const roomId = uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
 
-            router.push(`/chat/${roomId}`);
+            router.push(`/(chat)/${roomId}`);
           }}
         >
           <Text style={styles.chatText}>Chat Now</Text>

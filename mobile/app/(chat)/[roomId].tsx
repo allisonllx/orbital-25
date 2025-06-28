@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import Constants from 'expo-constants';
 import { useCallback, useState, useEffect, useLayoutEffect } from 'react';
-import { Alert, AppState, Platform } from 'react-native';
+import { Alert, AppState, Platform, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -11,6 +11,7 @@ import { ChatInput } from "@/components/ChatInput";
 import { User, Message } from "@/types/types";
 import { socket } from '@/app/index';
 import { useAuth } from "@/hooks/AuthContext";
+import { API_HOST as rawHost } from '@/constants/api';
 
 export default function ChatRoomScreen() {
     const [loading, setLoading] = useState(false);
@@ -23,7 +24,6 @@ export default function ChatRoomScreen() {
     const [isOnline, setIsOnline] = useState<boolean>(false);
     const { roomId } = useLocalSearchParams<{ roomId: string }>();
     
-    const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
     const host =
         Platform.OS === 'android'
         ? rawHost.replace('localhost', '10.0.2.2')
@@ -183,16 +183,20 @@ export default function ChatRoomScreen() {
 
     // TODO: modify the design, also consider rendering only when messages are fetched, otherwise show some loading page
     return (
-        <ThemedView>
+        <>
             {loading || !partner
              ? <ThemedText>Loading Messages ...</ThemedText>
-             : (<ThemedView>
+             : (<ThemedView style={{ flex: 1 }}>
                     <ChatHeader name={partner.name} lastSeen={partner.last_seen} isOnline={isOnline} />
-                    <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
-                    <ChatInput onSend={sendMessage}/>
+                    <View style={{ flex: 1 }}>
+                        <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
+                    </View>
+                    <View style={{ position: 'absolute', bottom: 10, left: 0, right: 0 }}>
+                        <ChatInput onSend={sendMessage}/>
+                    </View>
                 </ThemedView>
                )
             }
-        </ThemedView>
+        </>
     )
 }
