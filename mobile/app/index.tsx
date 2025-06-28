@@ -4,8 +4,8 @@ import { useAuth } from '@/hooks/AuthContext';
 import { io } from 'socket.io-client';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { API_HOST as rawHost } from '@/constants/api';
 
-const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
 const host =
     Platform.OS === 'android'
     ? rawHost.replace('localhost', '10.0.2.2')

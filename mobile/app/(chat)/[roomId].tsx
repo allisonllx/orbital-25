@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import Constants from 'expo-constants';
-import { useCallback, useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { Alert, AppState, Platform } from 'react-native';
+import { useCallback, useState, useEffect, useLayoutEffect } from 'react';
+import { Alert, AppState, Platform, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -10,20 +10,20 @@ import { ChatMessages } from "@/components/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
 import { User, Message } from "@/types/types";
 import { socket } from '@/app/index';
+import { useAuth } from "@/hooks/AuthContext";
+import { API_HOST as rawHost } from '@/constants/api';
 
-type Props = {
-    userId: number
-};
-
-export function ChatRoomScreen({ userId }: Props) {
+export default function ChatRoomScreen() {
     const [loading, setLoading] = useState(false);
     // const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
+    if (!user) return (<ThemedText>Loading ...</ThemedText>);
+    const userId = user.id;
     const [partner, setPartner] = useState<User | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isOnline, setIsOnline] = useState<boolean>(false);
     const { roomId } = useLocalSearchParams<{ roomId: string }>();
     
-    const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
     const host =
         Platform.OS === 'android'
         ? rawHost.replace('localhost', '10.0.2.2')
@@ -72,23 +72,21 @@ export function ChatRoomScreen({ userId }: Props) {
     const fetchMessages = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${host}/chats/rooms/${roomId}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                // data is the array of messages
-                setMessages(data || []);
-              } else {
-                Alert.alert('Error', data.error || 'Failed to fetch messages');
+            const res = await fetch(`${host}/chats/rooms/${roomId}`);
+            const text = await res.text();
+            if (!res.ok) {
+                const errorData = text ? JSON.parse(text) : {};
+                Alert.alert('Error', errorData.error || 'Failed to fetch messages');
+                return;
               }
+          
+            const data = text ? JSON.parse(text) : [];
+            setMessages(data);
         } catch (err) {
-              console.error(err);
-              Alert.alert('Error', 'Unable to fetch messages');
+            console.error(err);
+            Alert.alert('Error', 'Unable to fetch messages');
         } finally {
-              setLoading(false);
+            setLoading(false);
         }
     }
 
@@ -105,11 +103,11 @@ export function ChatRoomScreen({ userId }: Props) {
                 // setUser(data);
                 setPartner(data);
               } else {
-                Alert.alert('Error', data.error || 'Failed to fetch messages');
+                Alert.alert('Error', data.error || 'Failed to fetch partner');
               }
         } catch (err) {
               console.error(err);
-              Alert.alert('Error', 'Unable to fetch messages');
+              Alert.alert('Error', 'Unable to fetch partner');
         }
     }
 
@@ -185,16 +183,20 @@ export function ChatRoomScreen({ userId }: Props) {
 
     // TODO: modify the design, also consider rendering only when messages are fetched, otherwise show some loading page
     return (
-        <ThemedView>
+        <>
             {loading || !partner
              ? <ThemedText>Loading Messages ...</ThemedText>
-             : (<ThemedView>
+             : (<ThemedView style={{ flex: 1 }}>
                     <ChatHeader name={partner.name} lastSeen={partner.last_seen} isOnline={isOnline} />
-                    <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
-                    <ChatInput onSend={sendMessage}/>
+                    <View style={{ flex: 1 }}>
+                        <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
+                    </View>
+                    <View style={{ position: 'absolute', bottom: 10, left: 0, right: 0 }}>
+                        <ChatInput onSend={sendMessage}/>
+                    </View>
                 </ThemedView>
                )
             }
-        </ThemedView>
+        </>
     )
 }

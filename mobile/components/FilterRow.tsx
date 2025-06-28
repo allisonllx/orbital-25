@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ScrollView } from 'react-native';
 
 type Props = {
   createdWithin: string | null;
@@ -17,7 +17,11 @@ export function FilterRow({
   onOpenDate,
 }: Props) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+    <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={true} 
+        style={styles.viewport} 
+        contentContainerStyle={styles.content}>
       <TouchableOpacity onPress={onOpenCategory} style={styles.chip}>
         <Text>Category</Text>
       </TouchableOpacity>
@@ -34,15 +38,20 @@ export function FilterRow({
 }
 
 const styles = StyleSheet.create({
-  filterRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#eee',
-    borderRadius: 20,
-    marginRight: 8,
-  },
-});
+    viewport: {
+      maxHeight: 48,   
+      marginBottom: 12,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+    },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: '#eee',
+      borderRadius: 20,
+      marginRight: 8,
+    },
+  });

@@ -1,11 +1,13 @@
-// SearchScreen.tsx
 import { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterRow } from '@/components/FilterRow';
 import { CategoryModal } from '@/components/CategoryModal';
 import { DateModal } from '@/components/DateModal';
-import Constants from 'expo-constants';
+import { TaskList } from '@/components/TaskList';
+import { Task } from '@/types/types';
+import { API_HOST as rawHost } from '@/constants/api';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
@@ -16,40 +18,49 @@ export default function SearchScreen() {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
 
-  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
+  const [results, setResults] = useState<Task[]>([]);
+
   const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
 
-  const applyFilters = () => {
-    console.log({ query, selectedCategories, createdWithin, isCompleted });
-  };
+//   const applyFilters = () => {
+//     console.log({ query, selectedCategories, createdWithin, isCompleted });
+//   };
+
+  const clearFilters = () => {
+    setQuery('');
+    setSelectedCategories([]);
+    setCreatedWithin(null);
+    setIsCompleted(null);
+  }
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       const params = new URLSearchParams();
-  
-      if (query) params.append('q', query); // assuming ?q=searchterm
+
+      if (query) params.append('q', query);
       if (selectedCategories.length > 0) {
-        selectedCategories.forEach(cat => params.append('categories', cat));
+        selectedCategories.forEach(cat => params.append('category', cat));
       }
-      if (createdWithin) params.append('created_within', createdWithin); // e.g. '24h', '7d'
+      if (createdWithin) params.append('created_within', createdWithin);
       if (isCompleted !== null) params.append('completed', isCompleted.toString());
-  
+
       const url = `${host}/tasks?${params.toString()}`;
-  
+      console.log(url);
+
       fetch(url)
         .then(res => res.json())
         .then(data => {
-          console.log('Filtered Tasks:', data);
-          // TODO: for rendering results (setResults(data) — you can add state to store results)
+          // console.log('Filtered Tasks:', data);
+          setResults(data);
+          // TODO: setResults(data)
         })
         .catch(err => {
           console.error('Failed to fetch filtered tasks', err);
         });
     }, 500);
-  
+
     return () => clearTimeout(timeout);
   }, [query, selectedCategories, createdWithin, isCompleted]);
-  
 
   return (
     <View style={styles.container}>
@@ -81,9 +92,11 @@ export default function SearchScreen() {
         onClose={() => setDateModalVisible(false)}
       />
 
-      <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-        <Text style={{ color: '#fff' }}>Apply Filters</Text>
+      <TouchableOpacity style={styles.applyButton} onPress={clearFilters}>
+        <Text style={{ color: '#fff' }}>Clear Filters</Text>
       </TouchableOpacity>
+
+      <TaskList tasks={results} />
     </View>
   );
 }
@@ -92,6 +105,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     flex: 1,
+    backgroundColor: 'white',
   },
   applyButton: {
     marginTop: 'auto',
@@ -99,5 +113,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 8,
+    marginBottom: 60, // Leave space for nav bar
   },
 });

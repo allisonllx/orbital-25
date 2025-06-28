@@ -5,8 +5,9 @@ import { useIsFocused } from '@react-navigation/native';
 import { MessageBubble } from '@/components/MessageBubble';
 import { Message } from '@/types/types';
 import { ThemedText } from '@/components/ThemedText';
+import { API_HOST as host } from '@/constants/api';
 
-const socket = io('http://localhost:3000'); // points to backend server
+const socket = io(host); // points to backend server
 
 type ChatItem = 
     | { type: 'date', date: string }
@@ -55,6 +56,8 @@ export function ChatMessages({ messages, currentUserId, chatPartnerId }: Props) 
             ref={flatListRef}
             data={groupMessagesByDate(messages)}
             keyExtractor={(item, index) => item.type === 'date' ? `date-${item.date}-${index}` : `msg-${item.id}`}
+            style={{ flex: 1 }}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => {
                 if (item.type == 'date') {
                     return <ThemedText>{item.date}</ThemedText>

@@ -2,7 +2,8 @@ import Logo from '@/assets/images/NUSeek logo.png';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/hooks/AuthContext';
-import Constants from 'expo-constants';
+import { API_HOST as rawHost } from '@/constants/api';
+// import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useCallback, useState, } from 'react';
 import {
@@ -20,7 +21,6 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const rawHost = Constants.expoConfig?.extra?.EXPRESS_HOST_URL ?? 'http://localhost:3000';
   const host =
     Platform.OS === 'android'
       ? rawHost.replace('localhost', '10.0.2.2')

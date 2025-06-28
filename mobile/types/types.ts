@@ -27,7 +27,8 @@ export type Message = {
     receiver_id: number,
     content: string,
     created_at: string,
-    is_read: boolean
+    is_read: boolean,
+    // type?: string
 }
 
 export type ChatRoom = {
@@ -37,4 +38,6 @@ export type ChatRoom = {
     user2_id?: number,
     created_at?: string,
     last_message_id: number
+    last_message_content?: string,
+    last_message_time?: string
 }

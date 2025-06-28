@@ -1,7 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { format, isToday, isYesterday } from 'date-fns';
+// import { useRouter } from 'expo-router';
 
 export function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -13,13 +14,16 @@ export function formatRelativeTime(dateStr: string): string {
 
 
 export function ChatHeader({ name, lastSeen, isOnline }: { name: string; lastSeen: string, isOnline: boolean }) {
+  // const router = useRouter();
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.name}>{name}</ThemedText>
-      <ThemedText style={styles.lastSeen}>
-        {isOnline ? 'online' : `last seen ${formatRelativeTime(lastSeen)}`}
-      </ThemedText>
+      
+        <ThemedText style={styles.name}>{name}</ThemedText>
+        <ThemedText style={styles.lastSeen}>
+          {isOnline ? 'online' : `last seen ${formatRelativeTime(lastSeen)}`}
+        </ThemedText>
+     
     </ThemedView>
   );
 }
@@ -32,6 +36,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
+  // backText: {
+  //   color: '#007aff',
+  //   fontSize: 16,
+  //   fontWeight: '500',
+  //   marginRight: 12,
+  // },
+  // centerBlock: {
+  //   flex: 1, 
+  // },
   name: {
     fontWeight: 'bold',
     fontSize: 18,
