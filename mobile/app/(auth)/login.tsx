@@ -17,6 +17,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         // handle login logic
         setLoading(true);
+        console.log(host);
         try {
             const res = await fetch(`${host}/auth/login`, {
                 method: 'POST',
@@ -46,6 +47,7 @@ export default function LoginScreen() {
             }
         } catch (err) {
             console.error(err);
+            if (err instanceof Error) console.log('Fetch failed:', err.message, err); 
             Alert.alert('Error', 'Unable to login');
         } finally {
             setLoading(false);
