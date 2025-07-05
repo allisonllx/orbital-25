@@ -37,6 +37,19 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "EXPRESS_HOST_URL": "http://192.168.86.28:3000",
+      "SOCKET_HOST": "ws://192.168.86.28:3000",
+      "eas": {
+        "projectId": "b76c2269-829e-42f9-b689-b2a5b829b40f"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b76c2269-829e-42f9-b689-b2a5b829b40f"
     }
   }
 }
