@@ -1,0 +1,499 @@
+openapi: 3.0.0
+info:
+  title: NUSeek API
+  version: 1.0.0
+  description: API for connecting help seekers and helpers
+
+servers:
+  - url: http://localhost:3000
+  - url: https://your-deployed-url.onrender.com
+
+tags:
+  - name: Auth
+    description: Authentication and user management endpoints
+  - name: Users
+    description: User profile and settings
+  - name: Tasks
+    description: Task management endpoints
+  - name: Chat
+    description: Messaging and chat room endpoints
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        200:
+          description: Server is alive
+
+  # AUTH ROUTES
+  /auth/register:
+    post:
+      tags:
+          - Auth
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        201:
+          description: User created successfully
+        400:
+          description: Invalid email format
+        409:
+          description: Email already registered
+        500:
+          description: Server error
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+        401:
+          description: Invalid credentials
+        500:
+          description: Server error
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: Send password reset verification code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        200:
+          description: Verification code sent
+        400:
+          description: Missing email
+        401:
+          description: Email not registered
+        500:
+          description: Failed to send email
+
+  /auth/verify-reset-code:
+    post:
+      tags:
+        - Auth
+      summary: Verify password reset code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+      responses:
+        200:
+          description: Code verified successfully
+        400:
+          description: Missing or invalid code/email
+        500:
+          description: Server error
+
+  # CHAT ROUTES
+  /chats/messages/{messageId}:
+    get:
+      tags:
+        - Chat
+      summary: Fetch a single message by ID
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Message found
+        500:
+          description: Server error
+
+  /chats/rooms/{roomId}:
+    get:
+      tags:
+        - Chat
+      summary: Fetch all messages in a chat room
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of messages
+        500:
+          description: Server error
+    post:
+      tags:
+        - Chat
+      summary: Create a new message in a chat room
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sender_id, receiver_id, content]
+              properties:
+                sender_id:
+                  type: integer
+                receiver_id:
+                  type: integer
+                content:
+                  type: string
+      responses:
+        201:
+          description: Message created successfully
+        400:
+          description: Missing required fields
+        500:
+          description: Server error
+
+  /chats/rooms/users/{userId}:
+    get:
+      tags:
+        - Chat
+      summary: Fetch all chat rooms for a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of rooms with last message
+        500:
+          description: Server error
+
+  /chats/messages/{messageId}:
+    put:
+      tags:
+        - Chat
+      summary: Update message read status
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isRead]
+              properties:
+                isRead:
+                  type: boolean
+      responses:
+        200:
+          description: Message updated successfully
+        404:
+          description: Message not found
+        500:
+          description: Server error
+
+  # TASKS ROUTES
+  /tasks/:
+    get:
+      tags:
+        - Tasks
+      summary: Fetch all tasks with optional filtering and semantic search
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Semantic search query
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+          description: Filter by user ID
+        - in: query
+          name: category
+          schema:
+            type: array
+            items:
+              type: string
+          description: Filter by categories
+        - in: query
+          name: created_within
+          schema:
+            type: string
+            enum: [24h, 7d, 30d]
+          description: Filter tasks created within timeframe
+        - in: query
+          name: completed
+          schema:
+            type: boolean
+          description: Filter by completion status
+      responses:
+        200:
+          description: List of tasks
+        500:
+          description: Server error
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, category, title, caption]
+              properties:
+                user_id:
+                  type: integer
+                category:
+                  type: array
+                  items:
+                    type: string
+                title:
+                  type: string
+                caption:
+                  type: string
+      responses:
+        201:
+          description: Task created successfully
+        400:
+          description: Missing required fields
+        500:
+          description: Server error
+
+  /tasks/{taskId}:
+    get:
+      tags:
+        - Tasks
+      summary: Fetch a single task by ID
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Task details
+        500:
+          description: Server error
+    put:
+      tags:
+        - Tasks
+      summary: Edit an existing task
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category, title, caption, completed]
+              properties:
+                category:
+                  type: array
+                  items:
+                    type: string
+                title:
+                  type: string
+                caption:
+                  type: string
+                completed:
+                  type: boolean
+      responses:
+        200:
+          description: Task updated successfully
+        404:
+          description: Task not found
+        500:
+          description: Server error
+
+  /tasks/{taskId}/comments:
+    get:
+      tags:
+        - Tasks
+      summary: Fetch all comments under a task
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of comments
+        500:
+          description: Server error
+    post:
+      tags:
+        - Tasks
+      summary: Create a new comment on a task
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, content]
+              properties:
+                userId:
+                  type: integer
+                content:
+                  type: string
+      responses:
+        201:
+          description: Comment created successfully
+        400:
+          description: Missing required fields
+        500:
+          description: Server error
+
+  # USERS ROUTES
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Fetch user by ID
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: User details found
+        500:
+          description: Server error
+
+  /users/system-update/{userId}:
+    put:
+      tags:
+        - Users
+      summary: System update user profile (lastSeen and/or points)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Provide lastSeen and/or points to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lastSeen:
+                  type: string
+                  format: date-time
+                points:
+                  type: integer
+              minProperties: 1
+      responses:
+        200:
+          description: User updated successfully
+        400:
+          description: Missing fields to update
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /users/update-password/{userId}:
+    put:
+      tags:
+        - Users
+      summary: Update user password (e.g., after forgot password)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: New password
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+      responses:
+        200:
+          description: Password updated successfully
+        404:
+          description: User not found
+        500:
+          description: Server error
