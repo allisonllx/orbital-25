@@ -11,7 +11,7 @@ CREATE TABLE users (
 CREATE TABLE tasks (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
-    category TEXT NOT NULL, 
+    category TEXT[] NOT NULL, 
     embedding VECTOR(1536), 
     title TEXT NOT NULL,
     caption TEXT NOT NULL,
