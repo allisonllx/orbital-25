@@ -10,11 +10,11 @@ jest.mock('redis', () => ({ createClient: () => mockRedis }));
 const request = require('supertest');
 const app = require('../../app');
 const pool = require('../../db/index');
-const sendResetEmail = require('../../mailer');
+const sendResetEmail = require('../../services/mailer');
 // const redis = require('redis');
 
-jest.mock('../../db.js');
-jest.mock('../../mailer');
+jest.mock('../../db/index');
+jest.mock('../../services/mailer');
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const sendResetEmail = require('../mailer');
+const sendResetEmail = require('../services/mailer');
 const { createClient } = require('redis');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/index');

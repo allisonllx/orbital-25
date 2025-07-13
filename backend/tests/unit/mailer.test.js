@@ -11,7 +11,7 @@ jest.mock('resend', () => {
     };
 });
 
-const sendResetEmail = require('../../mailer');
+const sendResetEmail = require('../../services/mailer');
 
 describe('sendResetEmail', () => {
   beforeEach(() => {

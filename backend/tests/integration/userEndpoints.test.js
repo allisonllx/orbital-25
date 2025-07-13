@@ -12,7 +12,7 @@ const request = require('supertest');
 const app = require('../../app');
 const pool = require('../../db/index');
 
-jest.mock('../../db.js');
+jest.mock('../../db/index');
 
 beforeEach(() => {
     jest.clearAllMocks();

@@ -13,7 +13,7 @@ const app = require('../../app');
 const pool = require('../../db/index');
 const utils = require('../../utils');
 
-jest.mock('../../db.js');
+jest.mock('../../db/index');
 jest.mock('../../utils');
 
 beforeEach(() => {

@@ -11,10 +11,10 @@ jest.mock('redis', () => ({ createClient: () => mockRedis }));
 const { createServer } = require('http');
 const Client = require('socket.io-client');
 const app = require('../../app');
-const { io } = require('../../socketServer');
+const { io } = require('../../services/socket');
 const pool = require('../../db/index');
 
-jest.mock('../../db.js');
+jest.mock('../../db/index');
 
 let server, address, url, clientSocket;
 
