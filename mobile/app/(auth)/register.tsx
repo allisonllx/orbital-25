@@ -68,8 +68,8 @@ export default function RegisterScreen() {
         throw new Error(payload.error || payload.message || 'Registration failed');
       }
 
-      if (payload.content) {
-        login(payload.content);
+      if (payload.token && payload.content) {
+        await login(payload.content, payload.token);
         router.replace('../(tabs)');
       } else {
         Alert.alert('Success', 'Account created! Please log in.');

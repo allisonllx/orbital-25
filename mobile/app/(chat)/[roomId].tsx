@@ -12,6 +12,7 @@ import { User, Message } from "@/types/types";
 import { socket } from '@/app/index';
 import { useAuth } from "@/hooks/AuthContext";
 import { API_HOST as rawHost } from '@/constants/api';
+import { authFetch } from '@/utils/authFetch';
 
 export default function ChatRoomScreen() {
     const [loading, setLoading] = useState(false);
@@ -72,7 +73,7 @@ export default function ChatRoomScreen() {
     const fetchMessages = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${host}/chats/rooms/${roomId}`);
+            const res = await authFetch(`${host}/chats/rooms/${roomId}`);
             const text = await res.text();
             if (!res.ok) {
                 const errorData = text ? JSON.parse(text) : {};
@@ -93,7 +94,7 @@ export default function ChatRoomScreen() {
     // handle fetch user logic (for partner)
     const fetchUser = async (user_id: number) => {
         try {
-            const res = await fetch(`${host}/users/${user_id}`, {
+            const res = await authFetch(`${host}/users/${user_id}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -130,7 +131,7 @@ export default function ChatRoomScreen() {
       
         // send to backend to persist (internally handles WebSocket emit)
         try {
-          await fetch(`${host}/chats/rooms/${roomId}`, {
+          await authFetch(`${host}/chats/rooms/${roomId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 

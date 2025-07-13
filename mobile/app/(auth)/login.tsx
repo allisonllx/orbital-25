@@ -38,9 +38,9 @@ export default function LoginScreen() {
             }
 
             // if (res.ok && user) {
-            if (res.ok && data?.content) {
+            if (res.ok && data?.token && data?.content) {
                 // login(user);
-                login(data.content);
+                await login(data.content, data.token);
                 router.replace('../(tabs)');
             } else {
                 Alert.alert('Login failed', 'Invalid credentials');

@@ -16,6 +16,7 @@ import Logo from '@/assets/images/NUSeek logo.png';
 import { categories } from '@/constants/Categories';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_HOST as host } from '@/constants/api';
+import { authFetch } from '@/utils/authFetch';
 
 export default function CreateTaskScreen() {
   const { user } = useAuth();
@@ -49,7 +50,7 @@ export default function CreateTaskScreen() {
     }
 
     try {
-      const res = await fetch(`${host}/tasks`, {
+      const res = await authFetch(`${host}/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

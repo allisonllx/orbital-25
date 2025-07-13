@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ChatRoom } from '@/types/types';
 import { useAuth } from '@/hooks/AuthContext';
 import { API_HOST as rawHost } from '@/constants/api';
+import { authFetch } from '@/utils/authFetch';
 
 type PartnerInfo = {
   id: number;
@@ -21,7 +22,10 @@ export default function ChatListScreen() {
   const userId = user.id;
 
   const router = useRouter();
-  const host = Platform.OS === 'android' ? rawHost.replace('localhost', '10.0.2.2') : rawHost;
+  let host = rawHost;
+  if (Platform.OS === 'android' && rawHost.includes('localhost')) {
+    host = rawHost.replace('localhost', '10.0.2.2');
+  }
 
   const getPartnerId = (roomId: string) => {
     const [a, b] = roomId.split('_').map(Number);
@@ -30,7 +34,7 @@ export default function ChatListScreen() {
 
   const fetchChatRooms = async () => {
     try {
-      const res = await fetch(`${host}/chats/rooms/users/${userId}`);
+      const res = await authFetch(`${host}/chats/rooms/users/${userId}`);
       const data: ChatRoom[] = await res.json();
       if (!res.ok) throw new Error('Failed to load chat rooms');
       setRooms(data);
@@ -40,7 +44,7 @@ export default function ChatListScreen() {
       const fetched: Record<number, PartnerInfo> = {};
       await Promise.all(
         ids.map(async id => {
-          const r = await fetch(`${host}/users/${id}`);
+          const r = await authFetch(`${host}/users/${id}`);
           const u = await r.json();
           if (r.ok) fetched[id] = { id, name: u.name };
         })

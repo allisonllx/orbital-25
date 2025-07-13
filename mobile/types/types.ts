@@ -2,7 +2,7 @@ export type User = {
     id: number,
     name: string,
     email: string,
-    password: string,
+    password?: string,
     last_seen: string, // ISO date string from timestamptz, remember to use Date()
     points: number,
     interests: string[]

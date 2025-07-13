@@ -12,6 +12,7 @@ import {
 import Constants from 'expo-constants';
 import { useAuth } from '@/hooks/AuthContext'; 
 import { API_HOST as host } from '@/constants/api';
+import { authFetch } from '@/utils/authFetch';
 
 
 export default function TaskDetailScreen() {
@@ -26,7 +27,7 @@ export default function TaskDetailScreen() {
   useEffect(() => {
     const fetchTask = async () => {
       try {
-        const res = await fetch(`${host}/tasks/${id}`);
+        const res = await authFetch(`${host}/tasks/${id}`);
         const data = await res.json();
         setTask(data);
       } catch (error) {

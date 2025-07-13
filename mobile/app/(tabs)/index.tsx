@@ -5,6 +5,7 @@ import { Task } from '@/types/types';
 import { TaskList } from '@/components/TaskList';
 import { TopBanner } from '@/components/TopBanner';
 import { API_HOST as host } from '@/constants/api';
+import { authFetch } from '@/utils/authFetch';
 
 export default function HomeScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -12,7 +13,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch(`${host}/tasks`);
+        const res = await authFetch(`${host}/tasks`);
         const data = await res.json();
         setTasks(data);
       } catch (err) {

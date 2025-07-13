@@ -8,6 +8,7 @@ import { DateModal } from '@/components/DateModal';
 import { TaskList } from '@/components/TaskList';
 import { Task } from '@/types/types';
 import { API_HOST as rawHost } from '@/constants/api';
+import { authFetch } from '@/utils/authFetch';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
@@ -46,7 +47,7 @@ export default function SearchScreen() {
       const url = `${host}/tasks?${params.toString()}`;
       console.log(url);
 
-      fetch(url)
+      authFetch(url)
         .then(res => res.json())
         .then(data => {
           // console.log('Filtered Tasks:', data);
