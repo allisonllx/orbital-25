@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
 const { generateEmbeddings } = require('../utils.js');
+const authenticate = require('./middleware/authMiddleware');
+
+router.use(authenticate);
 
 // fetch all tasks with filtering and semantic search capabilities
 router.get('/', async (req, res) => {

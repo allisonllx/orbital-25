@@ -2,24 +2,11 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
 const { io, emitWithRetry } = require('../socketServer');
+const authenticate = require('./middleware/authMiddleware');
 
-/**
- * @swagger
- * /messages/{messageId}:
- *   get:
- *     summary: Fetch a single message by ID
- *     parameters:
- *       - in: path
- *         name: messageId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Message found
- *       500:
- *         description: Server error
- */
+router.use(authenticate);
+
+// fetch a single message by id
 router.get('/messages/:messageId', async (req, res) => {
     const { messageId } = req.params;
     try {
@@ -33,24 +20,8 @@ router.get('/messages/:messageId', async (req, res) => {
     }
 })
 
-/**
- * @swagger
- * /rooms/{roomId}:
- *   get:
- *     summary: Fetch all messages in a chat room
- *     parameters:
- *       - in: path
- *         name: roomId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: List of messages
- *       500:
- *         description: Server error
- */
-router.get('/rooms/:roomId', async (req, res) => {
+// fetch all messages in a chat
+router.get('/rooms/:roomId/', async (req, res) => {
     const { roomId } = req.params;
     try {
         const result = await pool.query(
@@ -63,23 +34,7 @@ router.get('/rooms/:roomId', async (req, res) => {
     }
 })
 
-/**
- * @swagger
- * /rooms/users/{userId}:
- *   get:
- *     summary: Fetch all chat rooms for a user
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: List of rooms with last message
- *       500:
- *         description: Server error
- */
+// fetch all rooms for a single user
 router.get('/rooms/users/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -97,40 +52,8 @@ router.get('/rooms/users/:userId', async (req, res) => {
     }
 })
 
-/**
- * @swagger
- * /rooms/{roomId}:
- *   post:
- *     summary: Create a new message in a chat room
- *     parameters:
- *       - in: path
- *         name: roomId
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [sender_id, receiver_id, content]
- *             properties:
- *               sender_id:
- *                 type: integer
- *               receiver_id:
- *                 type: integer
- *               content:
- *                 type: string
- *     responses:
- *       201:
- *         description: Message created successfully
- *       400:
- *         description: Missing required fields
- *       500:
- *         description: Server error
- */
-router.post('/rooms/:roomId', async (req, res) => {
+// create new message in chat
+router.post('/rooms/:roomId/', async (req, res) => {
     const { roomId } = req.params;
     const { sender_id, receiver_id, content } = req.body;
     if (!sender_id || !receiver_id || !content) {
@@ -151,26 +74,16 @@ router.post('/rooms/:roomId', async (req, res) => {
         const message = result.rows[0];
 
         // emit event to send message data to connected clients
-        const hasListeners = io.sockets.adapter.rooms.get(message.room_id)?.size > 0;
-        if (hasListeners) {
-            await emitWithRetry(io, message.room_id, 'receive-message', message)
-                .catch(console.error);   // don’t let a socket error kill the request
-        }
-        // await emitWithRetry(io, message.room_id, 'receive-message', message);
+        await emitWithRetry(io, message.room_id, 'receive-message', message);
         // io.to(message.room_id).emit('receive-message', message);
 
-        // update last message in corresponding room (or create the room if yet created)
+        // update last message in corresponding room
         await pool.query(
-            `INSERT INTO rooms (room_id, user1_id, user2_id, last_message_id)
-             VALUES ($1,
-                     LEAST($2::int, $3::int),        -- smaller ID  → user1
-                     GREATEST($2::int, $3::int),     -- larger  ID  → user2
-                     $4)
-             ON CONFLICT (room_id)                   -- room already exists
-             DO UPDATE
-               SET last_message_id = EXCLUDED.last_message_id`,
-            [roomId, sender_id, receiver_id, message.id]
-        );
+            `UPDATE rooms
+             SET last_message_id = $1
+             WHERE room_id = $2`,
+            [message.id, roomId]
+          );
 
         res.status(201).json({
             message: "Comment created successfully",
@@ -181,35 +94,7 @@ router.post('/rooms/:roomId', async (req, res) => {
     }
 })
 
-/**
- * @swagger
- * /messages/{messageId}:
- *   put:
- *     summary: Update message read status
- *     parameters:
- *       - in: path
- *         name: messageId
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [isRead]
- *             properties:
- *               isRead:
- *                 type: boolean
- *     responses:
- *       200:
- *         description: Message updated successfully
- *       404:
- *         description: Message not found
- *       500:
- *         description: Server error
- */
+// update messages (for is_read)
 router.put('/messages/:messageId', async (req, res) => {
     const { messageId } = req.params;
     const { isRead } = req.body;

@@ -3,7 +3,9 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const sendResetEmail = require('../mailer.js');
 const { createClient } = require('redis');
+const jwt = require('jsonwebtoken');
 const pool = require('../db.js');
+const { cleanUser } = require('../utils.js');
 
 const redis = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379',
@@ -29,9 +31,13 @@ router.post('/register', async (req, res) => {
             'INSERT INTO users (name, email, password, last_seen, points) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [name, email, hashedPassword, last_seen, points]
         );
+        const user = result.rows[0];
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '2h' });
+
         res.status(201).json({
             message: "User created successfully",
-            content: result.rows[0]
+            token,
+            content: cleanUser(user)
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -54,7 +60,13 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        res.status(200).json({ message: 'Login successful', content: user });
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '2h' });
+
+        res.status(200).json({ 
+            message: 'Login successful', 
+            token,
+            content: cleanUser(user)
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

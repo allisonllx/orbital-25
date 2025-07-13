@@ -2,7 +2,7 @@ const OpenAI = require('openai');
 
 async function generateEmbeddings(text) {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    
+
     const response = await openai.embeddings.create({
         model: "text-embedding-3-small",
         input: text,
@@ -23,4 +23,10 @@ const generateRoomId = (id1, id2) => {
     return [num1, num2].sort((a, b) => a - b).join('_');
 };
 
-module.exports = { generateEmbeddings, generateRoomId };
+// for cleaning user payload
+const cleanUser = (user) => {
+    const { password, ...safeUser } = user;
+    return safeUser;
+  }
+
+module.exports = { generateEmbeddings, generateRoomId, cleanUser };

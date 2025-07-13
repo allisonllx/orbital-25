@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
+const authenticate = require('./middleware/authMiddleware');
+
+router.use(authenticate);
 
 // fetch user by ID
 router.get('/:userId', async (req, res) => {
