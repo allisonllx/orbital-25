@@ -6,7 +6,7 @@ info:
 
 servers:
   - url: http://localhost:3000
-  - url: https://your-deployed-url.onrender.com
+  - url: https://your-deployed-url.onrender.com # update to actual render url
 
 tags:
   - name: Auth
