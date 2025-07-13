@@ -12,7 +12,7 @@ const { createServer } = require('http');
 const Client = require('socket.io-client');
 const app = require('../../app');
 const { io } = require('../../socketServer');
-const pool = require('../../db.js');
+const pool = require('../../db/index');
 
 jest.mock('../../db.js');
 

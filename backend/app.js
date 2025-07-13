@@ -13,7 +13,7 @@ const {
     authLimiter,
     usersLimiter,
     tasksReadLimiter,
-  } = require('./rateLimiter');
+  } = require('./middlewares/rateLimiter');
 
 app.use(express.json());
 app.use(cors());

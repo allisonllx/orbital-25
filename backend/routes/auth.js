@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const sendResetEmail = require('../mailer.js');
+const sendResetEmail = require('../mailer');
 const { createClient } = require('redis');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/index');
-const { cleanUser } = require('../utils.js');
+const { cleanUser } = require('../utils');
 
 const redis = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379',

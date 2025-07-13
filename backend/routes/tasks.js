@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/index');
 const { generateEmbeddings } = require('../utils');
-const authenticate = require('./middleware/authMiddleware');
-const { tasksWriteLimiter } = require('../rateLimiter');
+const authenticate = require('../middlewares/auth');
+const { tasksWriteLimiter } = require('../middlewares/rateLimiter');
 
 router.use(authenticate);
 

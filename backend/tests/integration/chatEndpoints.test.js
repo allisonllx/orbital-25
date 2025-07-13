@@ -10,7 +10,7 @@ jest.mock('redis', () => ({ createClient: () => mockRedis }));
 
 const request = require('supertest');
 const app = require('../../app');
-const pool = require('../../db.js');
+const pool = require('../../db/index');
 const socketServer = require('../../socketServer');
 
 jest.mock('../../db.js');
