@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const pool = require('./db.js');
+const pool = require('./db/index.js');
 const authRouter = require('./routes/auth.js');
 const userRouter = require('./routes/users.js');
 const taskRouter = require('./routes/tasks.js');

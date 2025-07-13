@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db.js');
+const pool = require('../db/index');
 const { io, emitWithRetry } = require('../socketServer');
 const authenticate = require('./middleware/authMiddleware');
 const { chatLimiter } = require('../rateLimiter');

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const sendResetEmail = require('../mailer.js');
 const { createClient } = require('redis');
 const jwt = require('jsonwebtoken');
-const pool = require('../db.js');
+const pool = require('../db/index');
 const { cleanUser } = require('../utils.js');
 
 const redis = createClient({
