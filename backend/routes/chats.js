@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db.js');
 const { io, emitWithRetry } = require('../socketServer');
 const authenticate = require('./middleware/authMiddleware');
+const { chatLimiter } = require('../rateLimiter');
 
 router.use(authenticate);
 
@@ -53,7 +54,7 @@ router.get('/rooms/users/:userId', async (req, res) => {
 })
 
 // create new message in chat
-router.post('/rooms/:roomId/', async (req, res) => {
+router.post('/rooms/:roomId/', chatLimiter, async (req, res) => {
     const { roomId } = req.params;
     const { sender_id, receiver_id, content } = req.body;
     if (!sender_id || !receiver_id || !content) {

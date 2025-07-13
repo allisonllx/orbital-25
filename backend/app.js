@@ -1,22 +1,27 @@
 const express = require('express');
 const app = express();
 const pool = require('./db.js');
-const authRoutes = require('./routes/auth.js');
-const userRoutes = require('./routes/users.js');
-const taskRoutes = require('./routes/tasks.js');
-const chatRoutes = require('./routes/chats.js');
+const authRouter = require('./routes/auth.js');
+const userRouter = require('./routes/users.js');
+const taskRouter = require('./routes/tasks.js');
+const chatRouter = require('./routes/chats.js');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yaml');
+const {
+    authLimiter,
+    usersLimiter,
+    tasksReadLimiter,
+  } = require('./rateLimiter');
 
 app.use(express.json());
 app.use(cors());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/tasks', taskRoutes);
-app.use('/chats', chatRoutes);
+app.use('/auth', authLimiter, authRouter);
+app.use('/users', usersLimiter, userRouter);
+app.use('/tasks', tasksReadLimiter, taskRouter);
+app.use('/chats', chatRouter);
 
 app.get("/", async (req, res) => {
     res.json({ message: "Welcome to the API!" });

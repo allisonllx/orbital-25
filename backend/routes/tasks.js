@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db.js');
-const { generateEmbeddings } = require('../utils.js');
+const { generateEmbeddings } = require('../utils');
 const authenticate = require('./middleware/authMiddleware');
+const { tasksWriteLimiter } = require('../rateLimiter');
 
 router.use(authenticate);
 
@@ -105,7 +106,7 @@ router.get('/:taskId/comments', async (req, res) => {
 })
 
 // create new task 
-router.post('/', async (req, res) => {
+router.post('/', tasksWriteLimiter, async (req, res) => {
     const { user_id, category, title, caption } = req.body;
     if (!user_id || !category || !title || !caption) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -158,7 +159,7 @@ router.post('/:taskId/comments', async (req, res) => {
 })
 
 // edit task
-router.put('/:taskId', async (req, res) => {
+router.put('/:taskId', tasksWriteLimiter, async (req, res) => {
     const { taskId } = req.params;
     const { category, title, caption, completed } = req.body;
 
