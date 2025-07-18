@@ -62,12 +62,6 @@ export default function ChatListScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-        {/* Top Nav Bar */}
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
-            <Text style={styles.backText}>{'< Back'}</Text>
-          </TouchableOpacity>
-        </View>
         <ScrollView style={{ flex: 1 }}>
             {rooms.map(room => {
                 const partner = partners[getPartnerId(room.room_id)];

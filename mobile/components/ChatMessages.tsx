@@ -4,7 +4,6 @@ import { io } from 'socket.io-client';
 import { useIsFocused } from '@react-navigation/native';
 import { MessageBubble } from '@/components/MessageBubble';
 import { Message } from '@/types/types';
-import { ThemedText } from '@/components/ThemedText';
 import { API_HOST as host } from '@/constants/api';
 
 const socket = io(host); // points to backend server

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import Constants from 'expo-constants';
 import { useCallback, useState, useEffect, useLayoutEffect } from 'react';
-import { Alert, AppState, Platform, View } from 'react-native';
+import { Alert, AppState, Platform, View, KeyboardAvoidingView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -184,20 +184,31 @@ export default function ChatRoomScreen() {
 
     // TODO: modify the design, also consider rendering only when messages are fetched, otherwise show some loading page
     return (
-        <>
-            {loading || !partner
-             ? <ThemedText>Loading Messages ...</ThemedText>
-             : (<ThemedView style={{ flex: 1 }}>
-                    <ChatHeader name={partner.name} lastSeen={partner.last_seen} isOnline={isOnline} />
-                    <View style={{ flex: 1 }}>
-                        <ChatMessages messages={messages} currentUserId={userId} chatPartnerId={partnerId} />
-                    </View>
-                    <View style={{ position: 'absolute', bottom: 10, left: 0, right: 0 }}>
-                        <ChatInput onSend={sendMessage}/>
-                    </View>
-                </ThemedView>
-               )
-            }
-        </>
-    )
+      <>
+        {loading || !partner ? (
+          <ThemedText>Loading Messages ...</ThemedText>
+        ) : (
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} // Adjust offset as needed
+          >
+            <ThemedView style={{ flex: 1 }}>
+              <ChatHeader name={partner.name} lastSeen={partner.last_seen} isOnline={isOnline} />
+              <View style={{ flex: 1 }}>
+                <ChatMessages
+                  messages={messages}
+                  currentUserId={userId}
+                  chatPartnerId={partnerId}
+                />
+              </View>
+              <View style={{ paddingBottom: 7, paddingHorizontal: 10 }}>
+                <ChatInput onSend={sendMessage} />
+              </View>
+            </ThemedView>
+          </KeyboardAvoidingView>
+        )}
+      </>
+    );
+
 }
