@@ -19,10 +19,6 @@ export function ChatHeader({ name, lastSeen, isOnline }: { name: string; lastSee
   return (
     <ThemedView style={styles.container}>
 
-        <TouchableOpacity onPress={() => router.replace('/(chat)')}>
-          <ThemedText style={styles.backText}>{'< Back'}</ThemedText>
-        </TouchableOpacity>
-      
         <ThemedText style={styles.name}>{name}</ThemedText>
         <ThemedText style={styles.lastSeen}>
           {isOnline ? 'online' : `last seen ${formatRelativeTime(lastSeen)}`}
