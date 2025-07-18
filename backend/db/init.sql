@@ -6,6 +6,7 @@ CREATE TABLE users (
     last_seen TIMESTAMPTZ,
     points INTEGER DEFAULT 0,
     interests TEXT[] DEFAULT [] 
+    profile_pic TEXT
 );
 
 CREATE TABLE tasks (
