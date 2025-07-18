@@ -98,4 +98,34 @@ describe('User Endpoints', () => {
         expect(res.statusCode).toBe(404);
         expect(res.body.error).toBe('User not found');
     });
+
+    // Test for updating profile picture
+    test('PUT /users/update-profile-pic/:userId - success', async () => {
+        const updatedUser = {
+            id: 1,
+            profile_pic: 'https://i.pravatar.cc/300'
+        };
+
+        pool.query.mockResolvedValueOnce({ rows: [updatedUser] });
+
+        const res = await request(app)
+            .put('/users/update-profile-pic/1')
+            .send({ profile_pic: 'https://i.pravatar.cc/300' });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.profile_pic).toBe('https://i.pravatar.cc/300');
+    });
+
+    // Test for user not found in update profile picture (do we need this?)
+    test('PUT /users/update-profile-pic/:userId - user not found', async () => {
+        pool.query.mockResolvedValueOnce({ rows: [] });
+
+        const res = await request(app)
+            .put('/users/update-profile-pic/999')
+            .send({ profile_pic: 'https://i.pravatar.cc/300' });
+
+        expect(res.statusCode).toBe(404);
+        expect(res.body.error).toBe('User not found');
+    });
+
 })
