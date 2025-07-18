@@ -9,6 +9,9 @@ export function TopBanner() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.line}>
+
+      </View>
       <Image source={Logo} style={styles.logo} resizeMode="contain" />
 
       <TouchableOpacity onPress={() => router.push('/(chat)')}>
@@ -31,6 +34,15 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 120,
-    height: 40,
+    height: 120,
+  },
+  line: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: '#ccc',
+    zIndex: 2, // Ensure it’s *on top* of the logo
   },
 });
