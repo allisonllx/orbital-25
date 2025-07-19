@@ -91,6 +91,27 @@ router.get('/:taskId', async (req, res) => {
     }
 })
 
+// fetch all saved tasks by a user
+router.get('/saved', async (req, res) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+  
+    try {
+      const result = await pool.query(
+        `SELECT task_id FROM saved_tasks WHERE user_id = $1`,
+        [userId]
+      );
+      res.status(200).json(result.rows[0]);
+    } catch (err) {
+      console.error('Error fetching saved tasks:', err);
+      res.status(500).json({ error: 'Failed to fetch saved tasks' });
+    }
+  });
+  
+
 // fetch all comments under a task
 router.get('/:taskId/comments', async (req, res) => {
     const { taskId } = req.params;

@@ -5,8 +5,8 @@ CREATE TABLE users (
     password TEXT NOT NULL,
     last_seen TIMESTAMPTZ,
     points INTEGER DEFAULT 0,
-    interests TEXT[] DEFAULT [] 
-    profile_pic TEXT
+    interests TEXT[] DEFAULT [], 
+    profile_pic TEXT,
 );
 
 CREATE TABLE tasks (
@@ -18,6 +18,12 @@ CREATE TABLE tasks (
     caption TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(), 
     completed BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE saved_tasks (
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, task_id)
 );
 
 CREATE TABLE comments (
