@@ -8,6 +8,16 @@ servers:
   - url: http://localhost:3000
   - url: https://your-deployed-url.onrender.com # TODO: update to actual render url
 
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
 tags:
   - name: Auth
     description: Authentication and user management endpoints
@@ -22,6 +32,7 @@ paths:
   /health:
     get:
       summary: Health check endpoint
+      security: []
       responses:
         200:
           description: Server is alive
@@ -32,6 +43,7 @@ paths:
       tags:
           - Auth
       summary: Register a new user
+      security: []
       requestBody:
         required: true
         content:
@@ -62,6 +74,7 @@ paths:
       tags:
         - Auth
       summary: User login
+      security: []
       requestBody:
         required: true
         content:
@@ -88,6 +101,7 @@ paths:
       tags:
         - Auth
       summary: Send password reset verification code
+      security: []
       requestBody:
         required: true
         content:
@@ -114,6 +128,7 @@ paths:
       tags:
         - Auth
       summary: Verify password reset code
+      security: []
       requestBody:
         required: true
         content:
