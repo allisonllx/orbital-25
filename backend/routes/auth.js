@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const sendResetEmail = require('../services/mailer');
 const { createClient } = require('redis');
+// const r = require('redis');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/index');
 const { cleanUser } = require('../utils');
