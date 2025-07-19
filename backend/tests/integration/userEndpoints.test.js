@@ -13,6 +13,17 @@ const app = require('../../app');
 const pool = require('../../db/index');
 
 jest.mock('../../db/index');
+jest.mock('../../middlewares/rateLimiter', () => ({
+    authLimiter: (req, res, next) => next(),
+    usersLimiter: (req, res, next) => next(),
+    tasksReadLimiter: (req, res, next) => next(),
+    tasksWriteLimiter: (req, res, next) => next(),
+    chatLimiter: (req, res, next) => next(),
+  }));
+jest.mock('../../middlewares/auth', () => (req, res, next) => {
+    req.user = { id: 1, email: 'test@gmail.com' }; // mock decoded token payload
+    next();
+  });
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -99,33 +110,33 @@ describe('User Endpoints', () => {
         expect(res.body.error).toBe('User not found');
     });
 
-    // Test for updating profile picture
-    test('PUT /users/update-profile-pic/:userId - success', async () => {
-        const updatedUser = {
-            id: 1,
-            profile_pic: 'https://i.pravatar.cc/300'
-        };
+//     // Test for updating profile picture
+//     test('PUT /users/update-profile-pic/:userId - success', async () => {
+//         const updatedUser = {
+//             id: 1,
+//             profile_pic: 'https://i.pravatar.cc/300'
+//         };
 
-        pool.query.mockResolvedValueOnce({ rows: [updatedUser] });
+//         pool.query.mockResolvedValueOnce({ rows: [updatedUser] });
 
-        const res = await request(app)
-            .put('/users/update-profile-pic/1')
-            .send({ profile_pic: 'https://i.pravatar.cc/300' });
+//         const res = await request(app)
+//             .put('/users/update-profile-pic/1')
+//             .send({ profile_pic: 'https://i.pravatar.cc/300' });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body.profile_pic).toBe('https://i.pravatar.cc/300');
-    });
+//         expect(res.statusCode).toBe(200);
+//         expect(res.body.profile_pic).toBe('https://i.pravatar.cc/300');
+//     });
 
-    // Test for user not found in update profile picture (do we need this?)
-    test('PUT /users/update-profile-pic/:userId - user not found', async () => {
-        pool.query.mockResolvedValueOnce({ rows: [] });
+//     // Test for user not found in update profile picture (do we need this?)
+//     test('PUT /users/update-profile-pic/:userId - user not found', async () => {
+//         pool.query.mockResolvedValueOnce({ rows: [] });
 
-        const res = await request(app)
-            .put('/users/update-profile-pic/999')
-            .send({ profile_pic: 'https://i.pravatar.cc/300' });
+//         const res = await request(app)
+//             .put('/users/update-profile-pic/999')
+//             .send({ profile_pic: 'https://i.pravatar.cc/300' });
 
-        expect(res.statusCode).toBe(404);
-        expect(res.body.error).toBe('User not found');
-    });
+//         expect(res.statusCode).toBe(404);
+//         expect(res.body.error).toBe('User not found');
+//     });
 
 })

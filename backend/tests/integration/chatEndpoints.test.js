@@ -15,6 +15,17 @@ const socketServer = require('../../services/socket');
 
 jest.mock('../../db/index');
 jest.mock('../../services/socket');
+jest.mock('../../middlewares/rateLimiter', () => ({
+    authLimiter: (req, res, next) => next(),
+    usersLimiter: (req, res, next) => next(),
+    tasksReadLimiter: (req, res, next) => next(),
+    tasksWriteLimiter: (req, res, next) => next(),
+    chatLimiter: (req, res, next) => next(),
+  }));
+jest.mock('../../middlewares/auth', () => (req, res, next) => {
+    req.user = { id: 1, email: 'test@gmail.com' }; // mock decoded token payload
+    next();
+  });
 
 beforeEach(() => {
   jest.clearAllMocks();

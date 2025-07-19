@@ -1,7 +1,7 @@
 const { Resend } = require('resend');
 if (process.env.NODE_ENV !== 'production') {
     const path = require('path');
-    require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+    require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY);
