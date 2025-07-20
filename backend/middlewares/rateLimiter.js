@@ -9,6 +9,8 @@ const redisClient = createClient({
   await redisClient.connect();
 })().catch(console.error);
 
+// redisClient.on('error', (err) => console.log('Redis Client Error', err));
+
 console.log(redisClient);
 
 // helper: per-user-or-IP key
@@ -21,6 +23,7 @@ const makeLimiter = ({ windowMs, max, message }) => {
     keyPrefix: 'rl',
     points: max,
     duration: Math.ceil(windowMs / 1000),
+    useRedisPackage: true,
   });
 
   return async (req, res, next) => {
@@ -40,14 +43,15 @@ const authLimiter = (() => {
     keyPrefix: 'auth',
     points: 15,
     duration: 15 * 60, // 15 min
+    useRedisPackage: true,
   });
 
   return async (req, res, next) => {
     try {
       await limiter.consume(req.ip);
       next();
-    } catch (_) {
-      res.status(429).json({ message: 'Too many auth attempts — try again later.' });
+    } catch (err) {
+      res.status(429).json({ message: `Too many auth attempts — try again later. Error message: ${err}` });
     }
   };
 })();
