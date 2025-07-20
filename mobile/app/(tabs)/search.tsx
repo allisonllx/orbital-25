@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
-import Constants from 'expo-constants';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterRow } from '@/components/FilterRow';
 import { CategoryModal } from '@/components/CategoryModal';
@@ -9,6 +8,7 @@ import { TaskList } from '@/components/TaskList';
 import { Task } from '@/types/types';
 import { API_HOST as rawHost } from '@/constants/api';
 import { authFetch } from '@/utils/authFetch';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
@@ -33,34 +33,34 @@ export default function SearchScreen() {
     setIsCompleted(null);
   }
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const params = new URLSearchParams();
-
-      if (query) params.append('q', query);
-      if (selectedCategories.length > 0) {
-        selectedCategories.forEach(cat => params.append('category', cat));
-      }
-      if (createdWithin) params.append('created_within', createdWithin);
-      if (isCompleted !== null) params.append('completed', isCompleted.toString());
-
-      const url = `${host}/tasks?${params.toString()}`;
-      console.log(url);
-
-      authFetch(url)
-        .then(res => res.json())
-        .then(data => {
-          // console.log('Filtered Tasks:', data);
-          setResults(data);
-          // TODO: setResults(data)
-        })
-        .catch(err => {
-          console.error('Failed to fetch filtered tasks', err);
-        });
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [query, selectedCategories, createdWithin, isCompleted]);
+  useFocusEffect(
+    useCallback(() => {
+      const timeout = setTimeout(() => {
+        const params = new URLSearchParams();
+  
+        if (query) params.append('q', query);
+        if (selectedCategories.length > 0) {
+          selectedCategories.forEach(cat => params.append('category', cat));
+        }
+        if (createdWithin) params.append('created_within', createdWithin);
+        if (isCompleted !== null) params.append('completed', isCompleted.toString());
+  
+        const url = `${host}/tasks?${params.toString()}`;
+        console.log(url);
+  
+        authFetch(url)
+          .then(res => res.json())
+          .then(data => {
+            setResults(data);
+          })
+          .catch(err => {
+            console.error('Failed to fetch filtered tasks', err);
+          });
+      }, 500);
+  
+      return () => clearTimeout(timeout);
+    }, [query, selectedCategories, createdWithin, isCompleted])
+  );
 
   return (
     <View style={styles.container}>

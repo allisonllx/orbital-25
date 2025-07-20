@@ -13,7 +13,7 @@ export function TaskCard({ task }: { task: Task }) {
     const router = useRouter();
     const { user } = useAuth();
     if (!user) return (<ThemedText>Loading ...</ThemedText>);
-    const userId = user.id;
+    // const userId = user.id;
     const [isSaved, setIsSaved] = useState(false); 
 
     // TODO: shift fetching logic outside of task card in the future 
@@ -23,11 +23,22 @@ export function TaskCard({ task }: { task: Task }) {
         const fetchSaved = async () => {
           try {
             const res = await authFetch(`${host}/tasks/saved`);
-            const data = await res.json();
+            const text = await res.text();
+
+            if (!res.ok) {
+                console.error(`Error fetching saved tasks: ${res.status} - ${text}`);
+                return;
+              }
+
+            const data = JSON.parse(text);
+            if (!Array.isArray(data)) {
+                console.error('Expected array but got:', data);
+                return;
+            }
             const savedTaskIds = data.map((row: { task_id: number }) => row.task_id);
             setIsSaved(savedTaskIds.includes(task.id));
           } catch (error) {
-            console.error('Failed to check saved status', error);
+            console.error('Failed to fetch saved status', error);
           }
         };
     
