@@ -69,7 +69,8 @@ router.post('/login', async (req, res) => {
             content: cleanUser(user)
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Login error:", err);
+        res.status(500).json({ error: "Internal server error" });
     }
 })
 

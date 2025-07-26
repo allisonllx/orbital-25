@@ -16,30 +16,26 @@ router.get('/:userId', async (req, res) => {
     }
 })
 
-// edit user profile (by user) (TODO)
+// update name
+router.put('/update-name/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { name } = req.body;
 
-// update profile picture 
-router.put('/update-profile/:userId', async (req, res) => {
-    const { userId } = req.params;
-    const { profile_pic } = req.body;
+  if (!name) return res.status(400).json({ error: "Name is required" });
 
-    if (!profile_pic) {
-        return res.status(400).json({ error: "Profile picture URL is required" });
+  try {
+    const result = await pool.query(
+      "UPDATE users SET name = $1 WHERE id = $2 RETURNING *",
+      [name, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
     }
-
-    try {
-        const result = await pool.query(
-            "UPDATE users SET profile_pic = $1 WHERE id = $2 RETURNING *",
-            [profile_pic, userId]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: "User not found" });
-        }
-        res.json(result.rows[0]);       
-    } catch (err) {
-        res.status(500).json({ error: err.message });   
-    }
-})
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // edit user profile (for updating last_seen and points by the system)
 router.put('/system-update/:userId', async (req, res) => {
@@ -81,8 +77,6 @@ router.put('/system-update/:userId', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 })
-
-module.exports = router;
 
 // update password (for forgot password)
 router.put('/update-password/:userId', async (req, res) => {
@@ -157,4 +151,5 @@ router.delete('/unsave-task/:taskId', async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   });
-  
+
+module.exports = router;
