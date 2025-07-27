@@ -61,8 +61,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="notif"
         options={{
-          title: 'Notifs',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bell.fill" color={color} />
+          title: 'Saved',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bookmark.fill" color={color} />
         }}
       />
       <Tabs.Screen
