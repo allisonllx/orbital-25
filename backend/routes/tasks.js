@@ -56,8 +56,9 @@ router.get('/', async (req, res) => {
 
             let whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : "";
             const result = await pool.query(
-                `
-                SELECT * FROM tasks
+                `SELECT tasks.*, users.name AS user_name
+                FROM tasks
+                JOIN users ON tasks.user_id = users.id
                 ${whereClause}
                 ${whereClause ? 'AND' : 'WHERE'} ${vectorClause}
                 LIMIT 20
@@ -70,7 +71,13 @@ router.get('/', async (req, res) => {
 
         // fallback if there is no q (aka keyword)
         let whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : "";
-        const result = await pool.query(`SELECT * FROM tasks ${whereClause}`, values);
+        const result = await pool.query(`
+            SELECT tasks.*, users.name AS user_name
+            FROM tasks
+            JOIN users ON tasks.user_id = users.id
+            ${whereClause}
+            ORDER BY tasks.created_at DESC
+        `, values);
         res.status(200).json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -87,8 +94,10 @@ router.get('/saved', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT tasks.* FROM saved_tasks
+      `SELECT tasks.*, users.name AS user_name
+       FROM saved_tasks
        JOIN tasks ON saved_tasks.task_id = tasks.id
+       JOIN users ON tasks.user_id = users.id
        WHERE saved_tasks.user_id = $1`,
       [userId]
     );
@@ -105,14 +114,20 @@ router.get('/:taskId', async (req, res) => {
     const { taskId } = req.params;
     try {
         const result = await pool.query(
-            `SELECT * FROM tasks WHERE id = $1`,
+            `SELECT tasks.*, users.name AS user_name 
+             FROM tasks 
+             JOIN users ON tasks.user_id = users.id 
+             WHERE tasks.id = $1`,
             [taskId]
         );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
         res.status(200).json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-})
+});
 
 // fetch all comments under a task
 router.get('/:taskId/comments', async (req, res) => {
@@ -207,5 +222,25 @@ router.put('/:taskId', tasksWriteLimiter, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 })
+
+// delete task
+router.delete('/:taskId', authenticate, async (req, res) => {
+  const { taskId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const result = await pool.query('DELETE FROM tasks WHERE id = $1 AND user_id = $2 RETURNING *', [taskId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(403).json({ error: 'Unauthorized or task not found' });
+    }
+
+    res.status(200).json({ message: 'Task deleted' });
+  } catch (err) {
+    console.error('Error deleting task:', err);
+    res.status(500).json({ error: 'Failed to delete task' });
+  }
+});
+
 
 module.exports = router;
