@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-// import Constants from 'expo-constants';
 import { Task } from '@/types/types';
 import { TaskList } from '@/components/TaskList';
 import { TopBanner } from '@/components/TopBanner';
@@ -10,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [savedIds, setSavedIds] = useState<number[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -22,14 +22,48 @@ export default function HomeScreen() {
           console.error('Error fetching tasks:', err);
         }
       };
+
+      const fetchSaved = async () => {
+        try {
+          const res = await authFetch(`${host}/tasks/saved`);
+          const data = await res.json();
+          setSavedIds(data.map((task: Task) => task.id));
+        } catch (err) {
+          console.error('Error fetching saved tasks:', err);
+        }
+      };
+
       fetchTasks();
+      fetchSaved();
     }, [])
   );
+
+  const handleToggleSave = async (taskId: number, newState: boolean) => {
+    try {
+      const endpoint = newState
+        ? `${host}/users/save-task/${taskId}`
+        : `${host}/users/unsave-task/${taskId}`;
+      await authFetch(endpoint, {
+        method: newState ? 'POST' : 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      setSavedIds((prev) =>
+        newState ? [...prev, taskId] : prev.filter((id) => id !== taskId)
+      );
+    } catch (err) {
+      console.error('Failed to toggle save', err);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <TopBanner />
-      <TaskList tasks={tasks} />
+      <TaskList
+        tasks={tasks}
+        savedIds={savedIds}
+        onToggleSave={handleToggleSave}
+      />
     </View>
   );
 }
