@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Image, StyleSheet, TouchableOpacity, Alert,} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { authFetch } from '@/utils/authFetch';
 import { API_HOST as host } from '@/constants/api';
 import { useAuth } from '@/hooks/AuthContext';
 import { ThemedText } from '@/components/ThemedText';
 import logo from '@/assets/images/NUSeek logo.png';
-
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
 
   const handleSave = async () => {
     try {
@@ -54,6 +55,11 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSignOut = async () => {
+    await logout();
+    router.replace('/login');
+  };
+
   if (!user) {
     return (
       <View style={styles.loadingContainer}>
@@ -68,7 +74,6 @@ export default function ProfileScreen() {
 
       <View style={styles.infoRow}>
         <ThemedText style={styles.label}>Name</ThemedText>
-        <Text style={styles.editIcon}></Text>
       </View>
       <TextInput style={styles.input} value={name} onChangeText={setName} />
 
@@ -95,6 +100,10 @@ export default function ProfileScreen() {
 
       <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={isSaving}>
         <Text style={styles.saveText}>{isSaving ? 'Saving...' : 'Save'}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+        <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
     </View>
   );
@@ -124,10 +133,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontSize: 14,
   },
-  editIcon: {
-    fontSize: 16,
-    marginLeft: 6,
-  },
   infoRow: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
@@ -149,11 +154,22 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#004AAD',
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: 44,
     borderRadius: 6,
     marginTop: 10,
   },
   saveText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  signOutButton: {
+    backgroundColor: '#ff4d4d',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 6,
+    marginTop: 30,
+  },
+  signOutText: {
     color: 'white',
     fontWeight: '600',
   },
