@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (userData: User, token: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,8 +52,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+
+        const res = await fetch(`${host}/users/${decoded.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const user = await res.json();
+          setUser(user);
+        } else {
+          await AsyncStorage.removeItem('token');
+        }
+      } catch (err) {
+        console.error('Error refreshing user:', err);
+        await AsyncStorage.removeItem('token');
+      }
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
