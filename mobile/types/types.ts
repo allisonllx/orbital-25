@@ -11,13 +11,13 @@ export type User = {
 export type Task = {
     id: number;
     user_id: number;
+    user_name: string;
     category: string;
     title: string;
     caption: string;
     created_at: string;
     completed: boolean;
     embedding?: number[];
-    user_image?: string; // optional avatar image
   };
 
 export type Message = {
@@ -41,3 +41,11 @@ export type ChatRoom = {
     last_message_content?: string,
     last_message_time?: string
 }
+
+export type Comment = {
+  id: number;
+  user_id: number;
+  user_name?: string; // optional if sometimes missing
+  content: string;
+  created_at: string;
+};
