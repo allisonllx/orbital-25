@@ -62,9 +62,8 @@ export function TaskCard({ task }: { task: Task }) {
       <View style={styles.taskCard}>
         <View style={styles.topRow}>
             <View style={styles.taskHeader}>
-                {task.user_image && <Image source={{ uri: task.user_image }} style={styles.avatar} />}
                 <View>
-                    <Text style={styles.poster}>{`User #${task.user_id}`}</Text>
+                    <Text style={styles.poster}>{task.user_name || `User #${task.user_id}`}</Text>
                     <Text style={styles.timeAgo}>
                     {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
                     </Text>
