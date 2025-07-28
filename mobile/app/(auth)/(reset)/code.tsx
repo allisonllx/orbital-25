@@ -17,14 +17,14 @@ export default function CodeVerifyScreen() {
     const res = await fetch(`${host}/auth/verify-reset-code`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code }),
+      body: JSON.stringify({ email, code: code.trim() }),
     });
 
     if (res.ok) {
       const { token, content } = await res.json();
       await AsyncStorage.setItem('token', token);
       await login(content, token);
-      router.push({ pathname: '/(auth)/(reset)/new', params: { userId: content.id } });
+      router.replace('/(tabs)/home');
     } else {
       Alert.alert('Invalid or expired code');
     }
@@ -33,48 +33,58 @@ export default function CodeVerifyScreen() {
   return (
     <View style={styles.container}>
       <Image source={logo} style={styles.logo} />
-      <TextInput placeholder="Enter code" value={code} onChangeText={setCode} style={styles.input} />
-      <TouchableOpacity onPress={handleVerify} style={styles.button}><Text style={styles.buttonText}>Confirm</Text></TouchableOpacity>
-      <Text style={styles.link} onPress={() => router.replace('/(auth)/login')}>Back to Login</Text>
+      <TextInput
+        placeholder="Enter code"
+        value={code}
+        onChangeText={setCode}
+        style={styles.input}
+        keyboardType="number-pad"
+      />
+      <TouchableOpacity onPress={handleVerify} style={styles.button}>
+        <Text style={styles.buttonText}>Confirm</Text>
+      </TouchableOpacity>
+      <Text style={styles.link} onPress={() => router.replace('/(auth)/login')}>
+        Back to Login
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { 
-    flex: 1, 
-    padding: 24, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    backgroundColor: '#fff' 
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   logo: { 
-    width: 240, 
-    height: 240, 
-    marginBottom: 32, 
-    resizeMode: 'contain' 
+    width: 240,
+    height: 240,
+    marginBottom: 32,
+    resizeMode: 'contain',
   },
   input: { 
-    width: '100%', 
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    borderRadius: 6, 
-    padding: 12, 
-    marginBottom: 16 
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 16,
   },
   button: { 
-    backgroundColor: '#004AAD', 
-    paddingVertical: 12, 
-    paddingHorizontal: 32, 
-    borderRadius: 6 
+    backgroundColor: '#004AAD',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 6,
   },
   buttonText: { 
-    color: 'white', 
-    fontWeight: '600' 
+    color: 'white',
+    fontWeight: '600',
   },
   link: { 
-    marginTop: 16, 
-    color: '#004AAD', 
-    textDecorationLine: 'underline' 
-},
+    marginTop: 16,
+    color: '#004AAD',
+    textDecorationLine: 'underline',
+  },
 });
