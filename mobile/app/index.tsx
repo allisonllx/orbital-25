@@ -12,7 +12,13 @@ if (Platform.OS === 'android' && rawHost.includes('localhost')) {
 
 // Derive WebSocket URL: http → ws, https → wss
 const wsHost = httpHost.replace(/^http(s?):/, 'ws$1:');
-export const socket = io(wsHost, { ackTimeout: 10000, retries: 3 });
+export const socket = io(wsHost, {
+  transports: ['websocket'], 
+  forceNew: true,
+  autoConnect: true,
+  ackTimeout: 10000,
+  reconnectionAttempts: 3,
+});
 
 socket.on('connect', () => {
   console.log('WebSocket connected');
