@@ -175,7 +175,7 @@ export default function TaskDetailScreen() {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.chatButton}
-          onPress={() => {
+          onPress={async () => {
             if (!user || !task?.user_id || user.id === task.user_id) {
               Alert.alert("Oops", "You can't chat with yourself.");
               return;
@@ -185,7 +185,18 @@ export default function TaskDetailScreen() {
             const uid2 = task.user_id;
             const roomId = uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
 
-            router.push(`/(chat)/${roomId}`);
+            try {
+              await authFetch(`${host}/rooms/${roomId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user1_id: uid1, user2_id: uid2 }),
+              });
+
+              router.push(`/(chat)/${roomId}`);
+            } catch (err) {
+              console.error('Failed to create room:', err);
+              Alert.alert('Error', 'Could not start chat.');
+            }
           }}
         >
           <Text style={styles.chatText}>Chat now</Text>
