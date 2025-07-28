@@ -133,8 +133,12 @@ router.get('/:taskId', async (req, res) => {
 router.get('/:taskId/comments', async (req, res) => {
     const { taskId } = req.params;
     try {
-        const result = await pool.query(
-            `SELECT * FROM comments WHERE task_id = $1 ORDER BY created_at ASC`,
+         const result = await pool.query(
+            `SELECT comments.*, users.name AS user_name
+            FROM comments
+            JOIN users ON comments.user_id = users.id
+            WHERE comments.task_id = $1
+            ORDER BY comments.created_at ASC`,
             [taskId]
         );
         res.status(200).json(result.rows);

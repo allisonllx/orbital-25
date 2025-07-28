@@ -76,51 +76,68 @@ router.post('/login', async (req, res) => {
 
 // forgot password endpoint (send verification code)
 router.post('/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-        return res.status(400).json({ error: 'Missing email' });
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email' });
+  }
+
+  try {
+    // 1) check user exists
+    const result = await pool.query(
+      'SELECT 1 FROM users WHERE LOWER(email)=LOWER($1)',
+      [email]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Email not registered' });
     }
 
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
+    // 2) generate code & set in Redis under a known key
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const redisKey = `reset:${email.toLowerCase()}`;
+    await redis.set(redisKey, code, { EX: 600 }); // 10 minutes
 
-        if (!user) {
-            return res.status(401).json({ error: 'Email not registered' }); // only allow registered emails to reset password
-        }
+    console.log('[FORGOT PASSWORD] Redis key:', redisKey, 'code:', code);
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-        const ttl = 10 * 60; // 10 minutes
+    // 3) email it out
+    await sendResetEmail(email, code);
 
-        await redis.set(`reset:${email}`, code, { EX: ttl });
+    return res.status(200).json({ message: 'Verification code sent' });
+  } catch (err) {
+    console.error('Forgot-password error:', err);
+    return res.status(500).json({ error: 'Failed to send reset code' });
+  }
+});
 
-        await sendResetEmail(email, code);
-        res.status(200).json({ message: 'Verification code sent' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to send email: ' + err.message });
-    }
-})
 
 // verify reset code endpoint
 router.post('/verify-reset-code', async (req, res) => {
-    const { email, code } = req.body;
-    if (!email || !code) {
-        return res.status(400).json({ error: 'Missing email or code' });
-    }
+  const { email, code } = req.body;
+  // … existing Redis lookup & compare …
+  if (code.trim() === storedCode) {
+    await redis.del(redisKey);
 
-    try {
-        const storedCode = await redis.get(`reset:${email}`);
+    // fetch user
+    const { rows:[user] } = await pool.query(
+      'SELECT * FROM users WHERE LOWER(email)=LOWER($1)',
+      [email]
+    );
 
-        if (!storedCode || code != storedCode) {
-            res.status(400).json({ error: 'Invalid or expired code '});
-        }
+    // sign JWT
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
+    );
 
-        await redis.del(`reset:${email}`);
-        res.status(200).json({ message: 'Code verified' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
-})
+    return res.status(200).json({
+      message: 'Code verified',
+      token,
+      content: cleanUser(user),
+    });
+  }
+
+  return res.status(400).json({ error: 'Invalid or expired code' });
+});
+
 
 module.exports = router;
