@@ -9,6 +9,8 @@ NUSeek aims to be a community-driven platform that connects NUS students who nee
 - Comment under help requests to ask questions and gain clarification 
 - Edit your user profile
 
+For more details on our project, click on the following [link](https://docs.google.com/document/d/12BeeBjIBJq3f33igGvPg8Oom3S9jXbHCDpM-ghdKk04/edit?usp=sharing).
+
 ## Getting Started
 
 1. Clone the Repository
